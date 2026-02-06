@@ -77,8 +77,23 @@ export default function SignIndex({
                 setLoading(false);
             } catch (error) {
                 console.error("Error loading data:", error);
-                if (error.response && error.response.status === 410) {
-                    setError("This signing request was cancelled.");
+                if (error.response) {
+                    if (error.response.status === 410) {
+                        setError("This signing request was cancelled.");
+                    } else if (
+                        error.response.status === 403 &&
+                        error.response.data.message ===
+                            "Previous signers must complete their signatures first."
+                    ) {
+                        setError(
+                            "This document requires sequential signing. Please wait for the previous signers to complete their signatures before you can sign.",
+                        );
+                    } else {
+                        setError(
+                            error.response.data.message ||
+                                "Failed to load document",
+                        );
+                    }
                 } else {
                     setError(error.message || "Failed to load document");
                 }
@@ -280,23 +295,32 @@ export default function SignIndex({
 
     if (error) {
         const isCancelled = error === "This signing request was cancelled.";
+        const isSequentialError =
+            error.includes("sequential signing") ||
+            error.includes("Previous signers must complete");
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
                 <div className="max-w-md w-full bg-white rounded-3xl p-10 shadow-xl text-center border border-gray-100">
-                    <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <XCircle className="h-10 w-10 text-red-500" />
+                    <div
+                        className={`w-20 h-20 ${isSequentialError ? "bg-yellow-50" : "bg-red-50"} rounded-full flex items-center justify-center mx-auto mb-6`}
+                    >
+                        <XCircle
+                            className={`h-10 w-10 ${isSequentialError ? "text-yellow-500" : "text-red-500"}`}
+                        />
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900 mb-2">
                         {isCancelled
                             ? "Signing Request Cancelled"
-                            : "Document Loading Error"}
+                            : isSequentialError
+                              ? "Sequential Signing"
+                              : "Document Loading Error"}
                     </h1>
                     <p className="text-gray-500 mb-8">
                         {isCancelled
                             ? "This signing request has been cancelled and is no longer available."
                             : error}
                     </p>
-                    {!isCancelled && (
+                    {!isCancelled && !isSequentialError && (
                         <PrimaryButton
                             onClick={() => window.location.reload()}
                             className="w-full justify-center"

@@ -52,6 +52,19 @@ class ValidateSigningToken
             return response()->json(['message' => 'You have already signed.'], 409);
         }
 
+        // Check if this is a sequential workflow and enforce signing order
+        if ($signer->workflow->mode === 'sequential') {
+            // Check if all previous signers have completed their signatures
+            $previousSignersIncomplete = \App\Models\Signer::where('workflow_id', $signer->workflow_id)
+                ->where('order', '<', $signer->order)
+                ->where('status', '!=', 'completed')
+                ->exists();
+
+            if ($previousSignersIncomplete) {
+                return response()->json(['message' => 'Previous signers must complete their signatures first.'], 403);
+            }
+        }
+
         // Attach signer and workflow to the request for easy access in controllers
         $request->merge(['signer_signer' => $signer, 'signer_workflow' => $signer->workflow]);
 

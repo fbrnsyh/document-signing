@@ -91,7 +91,7 @@ class SigningController extends Controller
         ]);
 
         // Log document signing
-        $this->auditService->logDocumentSign($workflow->document_id, $signer->user_id, $request);
+        $this->auditService->logDocumentSign($workflow->document_id, auth()->id(), $request);
 
         // Check if all fields for this signer are complete
         $remainingFields = \App\Models\SignatureField::where('signer_id', $signer->id)
@@ -115,7 +115,7 @@ class SigningController extends Controller
             } else {
                 // If sequential, notify next signer
                 if ($workflow->mode === 'sequential') {
-                    // $this->workflowService->notifyNextSigner($workflow);
+                    $this->notifyNextSigner($workflow, $signer);
                 }
             }
         }
@@ -143,12 +143,39 @@ class SigningController extends Controller
         $workflow->update(['status' => 'cancelled']);
         $workflow->document->update(['status' => 'cancelled']);
 
-        $this->auditService->logDocumentReject($workflow->document_id, $signer->user_id, $request, $request->reason);
+        $this->auditService->logDocumentReject($workflow->document_id, auth()->id(), $request, $request->reason);
 
         // Notify all parties (will implement with events/mailables)
         // event(new DocumentRejected($workflow, $signer, $request->reason));
 
         return response()->json(['message' => 'Document rejected successfully.']);
+    }
+
+    /**
+     * Notify the next signer in a sequential workflow.
+     */
+    protected function notifyNextSigner(\App\Models\Workflow $workflow, \App\Models\Signer $currentSigner)
+    {
+        // Find the next signer in the sequence
+        $nextSigner = \App\Models\Signer::where('workflow_id', $workflow->id)
+            ->where('order', '>', $currentSigner->order)
+            ->where('status', 'pending')
+            ->orderBy('order')
+            ->first();
+
+        if ($nextSigner) {
+            // Generate a signing token for the next signer
+            $signingService = new \App\Services\SigningService();
+            $token = $signingService->generateToken($nextSigner);
+
+            // Log the notification (in a real implementation, you would send an email/notification here)
+            $this->auditService->logDocumentSign(
+                $workflow->document_id,
+                auth()->id(),
+                request(),
+                "Notified next signer: {$nextSigner->email} (Token: {$token})"
+            );
+        }
     }
 
     /**

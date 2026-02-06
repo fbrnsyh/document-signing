@@ -151,6 +151,7 @@ export default function Workflow({ auth, document: initialDocument }) {
                                         workflow={workflow}
                                         onNext={nextStep}
                                         onBack={prevStep}
+                                        onWorkflowUpdate={setWorkflow}
                                     />
                                 )}
 
