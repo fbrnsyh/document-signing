@@ -1,7 +1,14 @@
-export default function InputLabel({ value, className = '', children, ...props }) {
+import { Label } from "./ui/label";
+
+export default function InputLabel({
+    value,
+    className = "",
+    children,
+    ...props
+}) {
     return (
-        <label {...props} className={`block font-medium text-sm text-gray-700 ` + className}>
+        <Label {...props} className={`block ${className}`}>
             {value ? value : children}
-        </label>
+        </Label>
     );
 }

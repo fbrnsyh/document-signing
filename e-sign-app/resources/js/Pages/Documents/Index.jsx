@@ -56,11 +56,9 @@ export default function Index({ auth, documents, folders, filters }) {
                     <div className="flex gap-6">
                         {/* Sidebar */}
                         <div className="w-64 flex-shrink-0">
-                            <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-4">
+                            <div className="bg-card border text-card-foreground overflow-hidden shadow-sm sm:rounded-lg p-4">
                                 <div className="flex justify-between items-center mb-4">
-                                    <h3 className="font-bold text-gray-900">
-                                        Folders
-                                    </h3>
+                                    <h3 className="font-bold">Folders</h3>
                                     <button
                                         onClick={() =>
                                             setIsCreatingFolder(true)
@@ -212,7 +210,7 @@ export default function Index({ auth, documents, folders, filters }) {
                                             include_archived:
                                                 !filters.include_archived,
                                         })}
-                                        className="flex items-center px-2 py-2 text-xs font-medium text-gray-500 hover:text-gray-700"
+                                        className="flex items-center px-2 py-2 text-xs font-medium"
                                     >
                                         {filters.include_archived
                                             ? "Hide Archived"

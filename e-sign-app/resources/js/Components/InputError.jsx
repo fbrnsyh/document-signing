@@ -1,7 +1,9 @@
-export default function InputError({ message, className = '', ...props }) {
+import { Alert } from "./ui/alert";
+
+export default function InputError({ message, className = "", ...props }) {
     return message ? (
-        <p {...props} className={'text-sm text-red-600 ' + className}>
+        <Alert variant="destructive" className={className} {...props}>
             {message}
-        </p>
+        </Alert>
     ) : null;
 }
