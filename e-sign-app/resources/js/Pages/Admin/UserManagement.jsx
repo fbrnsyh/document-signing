@@ -91,13 +91,13 @@ export default function UserManagement({ auth }) {
     const getStatusColor = (status) => {
         switch (status) {
             case "active":
-                return "bg-green-100 text-green-800";
+                return "bg-success/10 text-success border-success/20";
             case "inactive":
-                return "bg-red-100 text-red-800";
+                return "bg-destructive/10 text-destructive border-destructive/20";
             case "pending":
-                return "bg-yellow-100 text-yellow-800";
+                return "bg-warning/10 text-warning border-warning/20";
             default:
-                return "bg-gray-100 text-gray-800";
+                return "bg-muted text-muted-foreground border-border";
         }
     };
 
@@ -109,7 +109,7 @@ export default function UserManagement({ auth }) {
         <AuthenticatedLayout
             user={auth.user}
             header={
-                <h2 className="font-semibold text-xl text-gray-800 leading-tight">
+                <h2 className="font-semibold text-xl text-foreground leading-tight">
                     User Management
                 </h2>
             }
@@ -118,10 +118,10 @@ export default function UserManagement({ auth }) {
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="p-6 bg-white border-b border-gray-200">
+                    <div className="bg-card overflow-hidden shadow-sm sm:rounded-lg border border-border">
+                        <div className="p-6">
                             <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-lg font-medium text-gray-900">
+                                <h3 className="text-lg font-bold text-foreground">
                                     Team Members
                                 </h3>
                                 <PrimaryButton
@@ -143,63 +143,63 @@ export default function UserManagement({ auth }) {
                                     onChange={(e) =>
                                         setRoleFilter(e.target.value)
                                     }
-                                    className="border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="bg-background text-foreground border-border rounded-md shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                                 >
-                                    <option value="">All Roles</option>
-                                    <option value="admin">Admin</option>
-                                    <option value="member">Member</option>
-                                    <option value="viewer">Viewer</option>
+                                    <option value="" className="bg-card">All Roles</option>
+                                    <option value="admin" className="bg-card">Admin</option>
+                                    <option value="member" className="bg-card">Member</option>
+                                    <option value="viewer" className="bg-card">Viewer</option>
                                 </select>
                                 <select
                                     value={statusFilter}
                                     onChange={(e) =>
                                         setStatusFilter(e.target.value)
                                     }
-                                    className="border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="bg-background text-foreground border-border rounded-md shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                                 >
-                                    <option value="">All Status</option>
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                    <option value="pending">Pending</option>
+                                    <option value="" className="bg-card">All Status</option>
+                                    <option value="active" className="bg-card">Active</option>
+                                    <option value="inactive" className="bg-card">Inactive</option>
+                                    <option value="pending" className="bg-card">Pending</option>
                                 </select>
                             </div>
 
                             {loading ? (
-                                <div className="text-center py-4">
-                                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+                                <div className="text-center py-12">
+                                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-primary"></div>
                                 </div>
                             ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
+                                 <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-border">
+                                        <thead className="bg-muted/50 text-muted-foreground uppercase tracking-wider text-xs font-bold">
                                             <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-6 py-4 text-left">
                                                     Name
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-6 py-4 text-left">
                                                     Email
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-6 py-4 text-left">
                                                     Role
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-6 py-4 text-left">
                                                     Status
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-6 py-4 text-left">
                                                     Actions
                                                 </th>
                                             </tr>
                                         </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
+                                         <tbody className="bg-transparent divide-y divide-border">
                                             {users.map((user) => (
-                                                <tr key={user.id}>
+                                                <tr key={user.id} className="hover:bg-muted/30 transition-colors">
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="text-sm font-medium text-gray-900">
+                                                        <div className="text-sm font-bold text-foreground">
                                                             {user.name}
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="text-sm text-gray-500">
+                                                        <div className="text-sm text-muted-foreground">
                                                             {user.email}
                                                         </div>
                                                     </td>
@@ -216,18 +216,18 @@ export default function UserManagement({ auth }) {
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <span
-                                                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(user.status)}`}
+                                                            className={`inline-flex px-2 py-1 text-[10px] font-bold uppercase rounded-full border ${getStatusColor(user.status)}`}
                                                         >
                                                             {user.status}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                         <Dropdown>
                                                             <Dropdown.Trigger>
-                                                                <button className="text-indigo-600 hover:text-indigo-900">
+                                                                <button className="text-primary hover:text-primary/80 flex items-center gap-1 transition-colors">
                                                                     Actions
                                                                     <svg
-                                                                        className="ml-1 h-4 w-4 inline"
+                                                                        className="h-4 w-4"
                                                                         fill="none"
                                                                         stroke="currentColor"
                                                                         viewBox="0 0 24 24"
@@ -275,22 +275,26 @@ export default function UserManagement({ auth }) {
                                         </tbody>
                                     </table>
 
-                                    {pagination.last_page > 1 && (
-                                        <div className="mt-4 flex justify-between items-center">
-                                            <div className="text-sm text-gray-700">
+                                     {pagination.last_page > 1 && (
+                                        <div className="mt-6 pt-4 border-t border-border flex justify-between items-center">
+                                            <div className="text-sm text-muted-foreground">
                                                 Showing{" "}
-                                                {(pagination.current_page - 1) *
-                                                    pagination.per_page +
-                                                    1}{" "}
+                                                <span className="font-bold text-foreground">
+                                                    {(pagination.current_page - 1) *
+                                                        pagination.per_page +
+                                                        1}
+                                                </span>{" "}
                                                 to{" "}
-                                                {Math.min(
-                                                    pagination.current_page *
-                                                        pagination.per_page,
-                                                    pagination.total,
-                                                )}{" "}
-                                                of {pagination.total} results
+                                                <span className="font-bold text-foreground">
+                                                    {Math.min(
+                                                        pagination.current_page *
+                                                            pagination.per_page,
+                                                        pagination.total,
+                                                    )}
+                                                </span>{" "}
+                                                of <span className="font-bold text-foreground">{pagination.total}</span> results
                                             </div>
-                                            <div className="flex gap-2">
+                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={() =>
                                                         handlePageChange(
@@ -302,7 +306,7 @@ export default function UserManagement({ auth }) {
                                                         pagination.current_page ===
                                                         1
                                                     }
-                                                    className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50"
+                                                    className="px-4 py-1.5 border border-border bg-card rounded-lg text-sm font-medium text-foreground disabled:opacity-30 hover:bg-muted transition-colors"
                                                 >
                                                     Previous
                                                 </button>
@@ -317,7 +321,7 @@ export default function UserManagement({ auth }) {
                                                         pagination.current_page ===
                                                         pagination.last_page
                                                     }
-                                                    className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50"
+                                                    className="px-4 py-1.5 border border-border bg-card rounded-lg text-sm font-medium text-foreground disabled:opacity-30 hover:bg-muted transition-colors"
                                                 >
                                                     Next
                                                 </button>

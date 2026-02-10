@@ -11,7 +11,8 @@ export default function SignatureCanvas({ onSave, onCancel }) {
     useEffect(() => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
-        ctx.strokeStyle = '#000';
+        // Use a color that works well in both light and dark modes, or stick to black/primary
+        ctx.strokeStyle = '#000'; 
         ctx.lineWidth = 2;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
@@ -61,7 +62,7 @@ export default function SignatureCanvas({ onSave, onCancel }) {
 
     return (
         <div className="flex flex-col gap-4">
-            <div className="border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 flex items-center justify-center relative overflow-hidden h-64">
+            <div className="border-2 border-dashed border-border rounded-xl bg-background flex items-center justify-center relative overflow-hidden h-64">
                 <canvas
                     ref={canvasRef}
                     width={500}
@@ -72,11 +73,11 @@ export default function SignatureCanvas({ onSave, onCancel }) {
                     onTouchStart={startDrawing}
                     onTouchEnd={stopDrawing}
                     onTouchMove={draw}
-                    className="cursor-crosshair touch-none"
+                    className="cursor-crosshair touch-none bg-white"
                 />
                 <button 
                     onClick={clear}
-                    className="absolute top-2 right-2 p-2 bg-white border border-gray-200 rounded-lg text-gray-500 hover:text-red-600 transition-colors shadow-sm"
+                    className="absolute top-2 right-2 p-2 bg-card border border-border rounded-lg text-muted-foreground hover:text-destructive transition-colors shadow-sm"
                     title="Clear"
                 >
                     <Eraser className="h-4 w-4" />

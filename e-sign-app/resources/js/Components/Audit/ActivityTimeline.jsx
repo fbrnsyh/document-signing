@@ -27,14 +27,14 @@ const ActivityTimeline = ({ documentId }) => {
     if (loading) {
         return (
             <div className="flex justify-center items-center h-32">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary"></div>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg text-sm font-medium">
                 {error}
             </div>
         );
@@ -58,9 +58,9 @@ const ActivityTimeline = ({ documentId }) => {
         switch (action) {
             case "document_uploaded":
                 return (
-                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-info/10 flex items-center justify-center">
                         <svg
-                            className="h-6 w-6 text-blue-600"
+                            className="h-6 w-6 text-info"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -76,9 +76,9 @@ const ActivityTimeline = ({ documentId }) => {
                 );
             case "document_viewed":
                 return (
-                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
+                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-muted flex items-center justify-center">
                         <svg
-                            className="h-6 w-6 text-gray-600"
+                            className="h-6 w-6 text-muted-foreground"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -100,9 +100,9 @@ const ActivityTimeline = ({ documentId }) => {
                 );
             case "document_signed":
                 return (
-                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-success/10 flex items-center justify-center">
                         <svg
-                            className="h-6 w-6 text-green-600"
+                            className="h-6 w-6 text-success"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -118,9 +118,9 @@ const ActivityTimeline = ({ documentId }) => {
                 );
             case "document_rejected":
                 return (
-                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
+                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center">
                         <svg
-                            className="h-6 w-6 text-red-600"
+                            className="h-6 w-6 text-destructive"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -136,9 +136,9 @@ const ActivityTimeline = ({ documentId }) => {
                 );
             case "workflow_created":
                 return (
-                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                         <svg
-                            className="h-6 w-6 text-purple-600"
+                            className="h-6 w-6 text-primary"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -154,9 +154,9 @@ const ActivityTimeline = ({ documentId }) => {
                 );
             default:
                 return (
-                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
+                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-muted flex items-center justify-center">
                         <svg
-                            className="h-6 w-6 text-gray-600"
+                            className="h-6 w-6 text-muted-foreground"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -197,27 +197,28 @@ const ActivityTimeline = ({ documentId }) => {
     const groupedActivities = groupActivitiesByDate(activities);
 
     return (
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
-            <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
+        <div className="bg-card shadow sm:rounded-xl border border-border overflow-hidden">
+            <div className="px-4 py-5 sm:px-6 border-b border-border">
+                <h3 className="text-lg font-bold text-foreground">
                     Activity Timeline
                 </h3>
-                <p className="mt-1 max-w-2xl text-sm text-gray-500">
+                <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
                     Track all activities related to this document
                 </p>
             </div>
 
             {Object.keys(groupedActivities).length === 0 ? (
-                <div className="px-4 py-5 sm:p-6 text-center text-gray-500">
+                <div className="px-4 py-12 text-center text-muted-foreground">
                     No activity recorded yet
                 </div>
             ) : (
-                <ul className="divide-y divide-gray-200">
+                <ul className="divide-y divide-border">
                     {Object.keys(groupedActivities)
                         .sort((a, b) => new Date(b) - new Date(a))
                         .map((date) => (
-                            <li key={date} className="p-4 sm:p-6">
-                                <div className="text-sm font-medium text-gray-900 mb-3">
+                            <li key={date} className="p-4 sm:p-6 hover:bg-muted/30 transition-colors">
+                                <div className="text-sm font-bold text-foreground mb-4 flex items-center">
+                                    <span className="w-2 h-2 rounded-full bg-primary mr-2" />
                                     {format(
                                         new Date(date),
                                         "EEEE, MMMM d, yyyy",
@@ -234,23 +235,23 @@ const ActivityTimeline = ({ documentId }) => {
                                                     activity.action,
                                                 )}
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="text-sm text-gray-900">
-                                                        <span className="font-medium">
+                                                    <div className="text-sm text-foreground">
+                                                        <span className="font-bold">
                                                             {activity.user
                                                                 ? activity.user
                                                                       .name
                                                                 : "System"}
                                                         </span>
-                                                        <span className="mx-1">
+                                                        <span className="mx-2 text-muted-foreground/50">
                                                             ·
                                                         </span>
-                                                        <span>
+                                                        <span className="text-muted-foreground">
                                                             {formatActionText(
                                                                 activity.action,
                                                             )}
                                                         </span>
                                                     </div>
-                                                    <div className="text-sm text-gray-500">
+                                                    <div className="text-xs text-muted-foreground/70 mt-0.5">
                                                         {format(
                                                             new Date(
                                                                 activity.created_at,
@@ -258,11 +259,8 @@ const ActivityTimeline = ({ documentId }) => {
                                                             "h:mm a",
                                                         )}
                                                         {activity.ip_address && (
-                                                            <span className="ml-2">
-                                                                from IP:{" "}
-                                                                {
-                                                                    activity.ip_address
-                                                                }
+                                                            <span className="ml-3 px-2 py-0.5 bg-muted rounded text-[10px]">
+                                                                IP: {activity.ip_address}
                                                             </span>
                                                         )}
                                                     </div>
@@ -270,42 +268,30 @@ const ActivityTimeline = ({ documentId }) => {
                                                         Object.keys(
                                                             activity.metadata,
                                                         ).length > 0 && (
-                                                            <div className="mt-1 text-sm text-gray-600">
+                                                            <div className="mt-2 p-2 bg-muted/50 rounded-lg text-xs text-muted-foreground space-y-1">
                                                                 {activity
                                                                     .metadata
                                                                     .document_title && (
-                                                                    <span>
-                                                                        Title:{" "}
-                                                                        {
-                                                                            activity
-                                                                                .metadata
-                                                                                .document_title
-                                                                        }
-                                                                    </span>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="font-semibold uppercase text-[9px] tracking-wider text-muted-foreground/60">Title:</span>
+                                                                        <span className="text-foreground/80">{activity.metadata.document_title}</span>
+                                                                    </div>
                                                                 )}
                                                                 {activity
                                                                     .metadata
                                                                     .reason && (
-                                                                    <span>
-                                                                        Reason:{" "}
-                                                                        {
-                                                                            activity
-                                                                                .metadata
-                                                                                .reason
-                                                                        }
-                                                                    </span>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="font-semibold uppercase text-[9px] tracking-wider text-muted-foreground/60">Reason:</span>
+                                                                        <span className="text-foreground/80">{activity.metadata.reason}</span>
+                                                                    </div>
                                                                 )}
                                                                 {activity
                                                                     .metadata
                                                                     .signers_count && (
-                                                                    <span>
-                                                                        Signers:{" "}
-                                                                        {
-                                                                            activity
-                                                                                .metadata
-                                                                                .signers_count
-                                                                        }
-                                                                    </span>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="font-semibold uppercase text-[9px] tracking-wider text-muted-foreground/60">Signers:</span>
+                                                                        <span className="text-foreground/80">{activity.metadata.signers_count}</span>
+                                                                    </div>
                                                                 )}
                                                             </div>
                                                         )}

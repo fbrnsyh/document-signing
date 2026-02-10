@@ -1,7 +1,20 @@
 import React from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router } from "@inertiajs/react";
-import PrimaryButton from "@/Components/PrimaryButton";
+import { Button } from "@/Components/ui/button";
+import { Input } from "@/Components/ui/input";
+import { Badge } from "@/Components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/Components/ui/table";
+import { Search, Plus, Download, Settings, Eye, Archive, ArchiveRestore, FolderPlus, Folder } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function Index({ auth, documents, folders, filters }) {
     const [search, setSearch] = React.useState(filters.search || "");
@@ -36,7 +49,7 @@ export default function Index({ auth, documents, folders, filters }) {
             user={auth.user}
             header={
                 <div className="flex justify-between items-center">
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
+                    <h2 className="font-semibold text-xl text-foreground leading-tight">
                         My Documents
                     </h2>
                     <Link
@@ -44,7 +57,10 @@ export default function Index({ auth, documents, folders, filters }) {
                             folder_id: filters.folder_id,
                         })}
                     >
-                        <PrimaryButton>Upload Document</PrimaryButton>
+                        <Button>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Upload Document
+                        </Button>
                     </Link>
                 </div>
             }
@@ -52,245 +68,149 @@ export default function Index({ auth, documents, folders, filters }) {
             <Head title="Documents" />
 
             <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="flex gap-6">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex flex-col md:flex-row gap-6">
                         {/* Sidebar */}
-                        <div className="w-64 flex-shrink-0">
-                            <div className="bg-card border text-card-foreground overflow-hidden shadow-sm sm:rounded-lg p-4">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="font-bold">Folders</h3>
-                                    <button
-                                        onClick={() =>
-                                            setIsCreatingFolder(true)
-                                        }
-                                        className="text-gray-400 hover:text-indigo-600"
+                        <div className="w-full md:w-64 flex-shrink-0">
+                            <Card className="h-fit">
+                                <CardHeader className="p-4 flex flex-row items-center justify-between space-y-0">
+                                    <CardTitle className="text-sm font-bold">Folders</CardTitle>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => setIsCreatingFolder(true)}
                                     >
-                                        <svg
-                                            className="h-5 w-5"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth="2"
-                                                d="M12 4v16m8-8H4"
+                                        <FolderPlus className="h-4 w-4 text-muted-foreground" />
+                                    </Button>
+                                </CardHeader>
+                                <CardContent className="p-4 pt-0">
+                                    {isCreatingFolder && (
+                                        <div className="mb-4 space-y-2">
+                                            <Input
+                                                value={newFolderName}
+                                                onChange={(e) => setNewFolderName(e.target.value)}
+                                                placeholder="Folder name"
+                                                className="h-8 text-xs"
+                                                autoFocus
+                                                onKeyDown={(e) => e.key === "Enter" && createFolder()}
                                             />
-                                        </svg>
-                                    </button>
-                                </div>
-
-                                {isCreatingFolder && (
-                                    <div className="mb-4">
-                                        <input
-                                            type="text"
-                                            value={newFolderName}
-                                            onChange={(e) =>
-                                                setNewFolderName(e.target.value)
-                                            }
-                                            placeholder="Folder name"
-                                            className="w-full text-xs rounded border-gray-300 mb-2"
-                                            autoFocus
-                                            onKeyDown={(e) =>
-                                                e.key === "Enter" &&
-                                                createFolder()
-                                            }
-                                        />
-                                        <div className="flex space-x-2">
-                                            <button
-                                                onClick={createFolder}
-                                                className="text-xs text-indigo-600 font-bold"
-                                            >
-                                                Save
-                                            </button>
-                                            <button
-                                                onClick={() =>
-                                                    setIsCreatingFolder(false)
-                                                }
-                                                className="text-xs text-gray-400"
-                                            >
-                                                Cancel
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <nav className="space-y-1">
-                                    <Link
-                                        href={route("documents.index", {
-                                            ...filters,
-                                            folder_id: undefined,
-                                        })}
-                                        className={`flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                                            !filters.folder_id
-                                                ? "bg-indigo-100 text-indigo-700"
-                                                : "text-gray-600 hover:bg-gray-50"
-                                        }`}
-                                    >
-                                        <svg
-                                            className="mr-3 h-5 w-5 text-gray-400"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth="2"
-                                                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                                            />
-                                        </svg>
-                                        All Documents
-                                    </Link>
-                                    {folders.map((folder) => (
-                                        <div key={folder.id}>
-                                            <Link
-                                                href={route("documents.index", {
-                                                    ...filters,
-                                                    folder_id: folder.id,
-                                                })}
-                                                className={`flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                                                    Number(
-                                                        filters.folder_id,
-                                                    ) === folder.id
-                                                        ? "bg-indigo-100 text-indigo-700"
-                                                        : "text-gray-600 hover:bg-gray-50"
-                                                }`}
-                                            >
-                                                <svg
-                                                    className="mr-3 h-5 w-5 text-gray-400"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke="currentColor"
+                                            <div className="flex space-x-2">
+                                                <Button size="sm" className="h-7 text-xs px-2" onClick={createFolder}>
+                                                    Save
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-7 text-xs px-2"
+                                                    onClick={() => setIsCreatingFolder(false)}
                                                 >
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth="2"
-                                                        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                                                    />
-                                                </svg>
-                                                <span className="truncate">
-                                                    {folder.name}
-                                                </span>
-                                            </Link>
-                                            {/* Subfolders check */}
-                                            {folder.children?.map((sub) => (
+                                                    Cancel
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <nav className="space-y-1">
+                                        <Link
+                                            href={route("documents.index", {
+                                                ...filters,
+                                                folder_id: undefined,
+                                            })}
+                                            className={`flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+                                                !filters.folder_id
+                                                    ? "bg-primary/10 text-primary"
+                                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                            }`}
+                                        >
+                                            <Folder className="mr-2 h-4 w-4 opacity-50" />
+                                            All Documents
+                                        </Link>
+                                        {folders.map((folder) => (
+                                            <div key={folder.id}>
                                                 <Link
-                                                    key={sub.id}
-                                                    href={route(
-                                                        "documents.index",
-                                                        {
-                                                            ...filters,
-                                                            folder_id: sub.id,
-                                                        },
-                                                    )}
-                                                    className={`ml-4 flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                                                        Number(
-                                                            filters.folder_id,
-                                                        ) === sub.id
-                                                            ? "bg-indigo-100 text-indigo-700"
-                                                            : "text-gray-600 hover:bg-gray-50"
+                                                    href={route("documents.index", {
+                                                        ...filters,
+                                                        folder_id: folder.id,
+                                                    })}
+                                                    className={`flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+                                                        Number(filters.folder_id) === folder.id
+                                                            ? "bg-primary/10 text-primary"
+                                                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                                     }`}
                                                 >
-                                                    <span className="truncate">
-                                                        {sub.name}
-                                                    </span>
+                                                    <Folder className="mr-2 h-4 w-4 opacity-50" />
+                                                    <span className="truncate">{folder.name}</span>
                                                 </Link>
-                                            ))}
-                                        </div>
-                                    ))}
-                                </nav>
+                                                {folder.children?.map((sub) => (
+                                                    <Link
+                                                        key={sub.id}
+                                                        href={route("documents.index", {
+                                                            ...filters,
+                                                            folder_id: sub.id,
+                                                        })}
+                                                        className={`ml-6 flex items-center px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                                                            Number(filters.folder_id) === sub.id
+                                                                ? "bg-primary/10 text-primary"
+                                                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                                        }`}
+                                                    >
+                                                        <span className="truncate">{sub.name}</span>
+                                                    </Link>
+                                                ))}
+                                            </div>
+                                        ))}
+                                    </nav>
 
-                                <div className="mt-8 pt-4 border-t border-gray-100">
-                                    <Link
-                                        href={route("documents.index", {
-                                            ...filters,
-                                            include_archived:
-                                                !filters.include_archived,
-                                        })}
-                                        className="flex items-center px-2 py-2 text-xs font-medium"
-                                    >
-                                        {filters.include_archived
-                                            ? "Hide Archived"
-                                            : "Show Archived"}
-                                    </Link>
-                                </div>
-                            </div>
+                                    <div className="mt-8 pt-4 border-t">
+                                        <Link
+                                            href={route("documents.index", {
+                                                ...filters,
+                                                include_archived: !filters.include_archived,
+                                            })}
+                                            className="flex items-center px-2 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                                        >
+                                            {filters.include_archived ? (
+                                                <><ArchiveRestore className="mr-2 h-3.5 w-3.5" /> Hide Archived</>
+                                            ) : (
+                                                <><Archive className="mr-2 h-3.5 w-3.5" /> Show Archived</>
+                                            )}
+                                        </Link>
+                                    </div>
+                                </CardContent>
+                            </Card>
                         </div>
 
                         {/* Main Content */}
                         <div className="flex-1">
-                            <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                                <div className="p-6 text-gray-900">
-                                    <div className="mb-6 flex justify-between items-center">
-                                        <form
-                                            onSubmit={handleSearch}
-                                            className="flex-1 max-w-sm"
-                                        >
-                                            <div className="relative">
-                                                <input
-                                                    type="text"
-                                                    value={search}
-                                                    onChange={(e) =>
-                                                        setSearch(
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    placeholder="Search documents..."
-                                                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                                />
-                                                <button
-                                                    type="submit"
-                                                    className="absolute inset-y-0 right-0 px-3 flex items-center"
-                                                >
-                                                    <svg
-                                                        className="h-4 w-4 text-gray-400"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth="2"
-                                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                                        />
-                                                    </svg>
-                                                </button>
-                                            </div>
+                            <Card>
+                                <CardContent className="p-6">
+                                    <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+                                        <form onSubmit={handleSearch} className="w-full sm:max-w-sm relative">
+                                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                            <Input
+                                                type="search"
+                                                value={search}
+                                                onChange={(e) => setSearch(e.target.value)}
+                                                placeholder="Search documents..."
+                                                className="pl-9"
+                                            />
                                         </form>
-                                        <div className="flex space-x-2">
-                                            {[
-                                                "all",
-                                                "draft",
-                                                "pending",
-                                                "completed",
-                                            ].map((status) => (
+                                        <div className="flex flex-wrap gap-2">
+                                            {["all", "draft", "pending", "completed"].map((status) => (
                                                 <Link
                                                     key={status}
-                                                    href={route(
-                                                        "documents.index",
-                                                        {
-                                                            ...filters,
-                                                            status:
-                                                                status === "all"
-                                                                    ? undefined
-                                                                    : status,
-                                                        },
-                                                    )}
-                                                    className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                                                        (filters.status ||
-                                                            "all") === status
-                                                            ? "bg-indigo-600 text-white"
-                                                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                                    }`}
+                                                    href={route("documents.index", {
+                                                        ...filters,
+                                                        status: status === "all" ? undefined : status,
+                                                    })}
                                                 >
-                                                    {status
-                                                        .charAt(0)
-                                                        .toUpperCase() +
-                                                        status.slice(1)}
+                                                    <Badge
+                                                        variant={(filters.status || "all") === status ? "default" : "secondary"}
+                                                        className="cursor-pointer hover:bg-primary/90 transition-colors capitalize"
+                                                    >
+                                                        {status}
+                                                    </Badge>
                                                 </Link>
                                             ))}
                                         </div>
@@ -298,168 +218,119 @@ export default function Index({ auth, documents, folders, filters }) {
 
                                     {documents.data.length === 0 ? (
                                         <div className="text-center py-12">
-                                            <svg
-                                                className="mx-auto h-12 w-12 text-gray-400 mb-4"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth="1"
-                                                    d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
-                                                />
-                                            </svg>
-                                            <p className="text-gray-500 mb-4">
-                                                No documents found matching your
-                                                criteria.
+                                            <Archive className="mx-auto h-12 w-12 text-muted-foreground/20 mb-4" />
+                                            <p className="text-muted-foreground">
+                                                No documents found matching your criteria.
                                             </p>
                                         </div>
                                     ) : (
                                         <>
-                                            <div className="overflow-x-auto">
-                                                <table className="min-w-full divide-y divide-gray-200">
-                                                    <thead>
-                                                        <tr>
-                                                            <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                                Title
-                                                            </th>
-                                                            <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                                Status
-                                                            </th>
-                                                            <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                                Created At
-                                                            </th>
-                                                            <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                                Actions
-                                                            </th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody className="bg-white divide-y divide-gray-200">
-                                                        {documents.data.map(
-                                                            (doc) => (
-                                                                <tr
-                                                                    key={doc.id}
-                                                                    className={
-                                                                        doc.archived_at
-                                                                            ? "bg-gray-50 grayscale opacity-80"
-                                                                            : ""
-                                                                    }
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>Title</TableHead>
+                                                        <TableHead>Status</TableHead>
+                                                        <TableHead>Created At</TableHead>
+                                                        <TableHead className="text-right">Actions</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {documents.data.map((doc) => (
+                                                        <TableRow
+                                                            key={doc.id}
+                                                            className={doc.archived_at ? "opacity-60 bg-muted/30" : ""}
+                                                        >
+                                                            <TableCell className="font-medium">
+                                                                <Link
+                                                                    href={route("documents.show", doc.id)}
+                                                                    className="hover:text-primary transition-colors flex items-center gap-2"
                                                                 >
-                                                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                                        <Link
-                                                                            href={route(
-                                                                                "documents.show",
-                                                                                doc.id,
+                                                                    <span className="truncate max-w-[200px] sm:max-w-xs">{doc.title}</span>
+                                                                    {doc.archived_at && (
+                                                                        <Badge variant="outline" className="text-[10px] h-4 px-1">
+                                                                            Archived
+                                                                        </Badge>
+                                                                    )}
+                                                                </Link>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <div className="flex flex-col gap-1 items-start">
+                                                                    <Badge
+                                                                        variant="outline"
+                                                                        className={cn(
+                                                                            "capitalize",
+                                                                            doc.status === "completed" && "border-success text-success bg-success/5",
+                                                                            doc.status === "cancelled" && "border-destructive text-destructive bg-destructive/5",
+                                                                            doc.status === "pending" && "border-warning text-warning bg-warning/5"
+                                                                        )}
+                                                                    >
+                                                                        {doc.status}
+                                                                    </Badge>
+                                                                    {!doc.is_owner && doc.my_status && (
+                                                                        <Badge 
+                                                                            variant="secondary" 
+                                                                            className={cn(
+                                                                                "text-[10px] h-4 px-1 w-fit",
+                                                                                (doc.my_status === 'completed' || doc.my_status === 'signed') && "bg-success/20 text-success border-success/30",
+                                                                                doc.is_my_turn && "bg-primary/20 text-primary border-primary/30 animate-pulse"
                                                                             )}
-                                                                            className="text-gray-900 font-medium hover:text-indigo-600 truncate block max-w-xs"
-                                                                            title={
-                                                                                doc.title
-                                                                            }
                                                                         >
-                                                                            {
-                                                                                doc.title
-                                                                            }
-                                                                            {doc.archived_at && (
-                                                                                <span className="ml-2 text-[10px] bg-gray-200 text-gray-500 px-1 rounded uppercase">
-                                                                                    Archived
-                                                                                </span>
-                                                                            )}
-                                                                        </Link>
-                                                                    </td>
-                                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                                        <span
-                                                                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                                                                doc.status ===
-                                                                                "completed"
-                                                                                    ? "bg-green-100 text-green-800"
-                                                                                    : doc.status ===
-                                                                                        "cancelled"
-                                                                                      ? "bg-red-100 text-red-800"
-                                                                                      : "bg-yellow-100 text-yellow-800"
-                                                                            }`}
-                                                                        >
-                                                                            {
-                                                                                doc.status
-                                                                            }
-                                                                        </span>
-                                                                    </td>
-                                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                                        {new Date(
-                                                                            doc.created_at,
-                                                                        ).toLocaleDateString()}
-                                                                    </td>
-                                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                                        <a
-                                                                            href={route(
-                                                                                "documents.download",
-                                                                                doc.id,
-                                                                            )}
-                                                                            className="text-indigo-600 hover:text-indigo-900 mr-4"
-                                                                        >
-                                                                            Download
+                                                                            {doc.my_status === 'completed' || doc.my_status === 'signed' ? 'Signed' : (doc.is_my_turn ? 'Your Turn' : 'Waiting')}
+                                                                        </Badge>
+                                                                    )}
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell className="text-muted-foreground text-xs">
+                                                                {new Date(doc.created_at).toLocaleDateString()}
+                                                            </TableCell>
+                                                            <TableCell className="text-right">
+                                                                <div className="flex justify-end gap-2">
+                                                                    <Button variant="ghost" size="icon" asChild title="Download">
+                                                                        <a href={route("documents.download", doc.id)}>
+                                                                            <Download className="h-4 w-4" />
                                                                         </a>
-                                                                        {doc.status ===
-                                                                            "draft" &&
-                                                                            !doc.archived_at && (
-                                                                                <Link
-                                                                                    href={route(
-                                                                                        "documents.workflow",
-                                                                                        doc.id,
-                                                                                    )}
-                                                                                    className="text-indigo-600 hover:text-indigo-900 mr-4 font-bold"
-                                                                                >
-                                                                                    Configure
-                                                                                </Link>
-                                                                            )}
-                                                                        <Link
-                                                                            href={route(
-                                                                                "documents.show",
-                                                                                doc.id,
-                                                                            )}
-                                                                            className="text-gray-600 hover:text-gray-900"
-                                                                        >
-                                                                            View
+                                                                    </Button>
+                                                                    {doc.status === "draft" && !doc.archived_at && (
+                                                                        <Button variant="ghost" size="icon" asChild title="Configure">
+                                                                            <Link href={route("documents.workflow", doc.id)}>
+                                                                                <Settings className="h-4 w-4" />
+                                                                            </Link>
+                                                                        </Button>
+                                                                    )}
+                                                                    <Button variant="ghost" size="icon" asChild title="View">
+                                                                        <Link href={route("documents.show", doc.id)}>
+                                                                            <Eye className="h-4 w-4" />
                                                                         </Link>
-                                                                    </td>
-                                                                </tr>
-                                                            ),
-                                                        )}
-                                                    </tbody>
-                                                </table>
-                                            </div>
+                                                                    </Button>
+                                                                </div>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+
                                             <div className="mt-8 flex justify-center">
-                                                <nav
-                                                    className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                                                    aria-label="Pagination"
-                                                >
-                                                    {documents.links.map(
-                                                        (link, i) => (
-                                                            <Link
-                                                                key={i}
-                                                                href={
-                                                                    link.url ||
-                                                                    "#"
-                                                                }
-                                                                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                                                                    link.active
-                                                                        ? "z-10 bg-indigo-50 border-indigo-500 text-indigo-600"
-                                                                        : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
-                                                                } ${i === 0 ? "rounded-l-md" : ""} ${i === documents.links.length - 1 ? "rounded-r-md" : ""}`}
-                                                                dangerouslySetInnerHTML={{
-                                                                    __html: link.label,
-                                                                }}
-                                                                preserveScroll
-                                                            />
-                                                        ),
-                                                    )}
-                                                </nav>
+                                                <div className="flex items-center gap-1">
+                                                    {documents.links.map((link, i) => (
+                                                        <Link
+                                                            key={i}
+                                                            href={link.url || "#"}
+                                                            className={cn(
+                                                                "h-9 px-3 flex items-center justify-center text-sm font-medium border rounded-md transition-colors",
+                                                                link.active
+                                                                    ? "border-primary bg-primary/10 text-primary"
+                                                                    : "border-border text-muted-foreground hover:bg-muted"
+                                                            )}
+                                                            dangerouslySetInnerHTML={{ __html: link.label }}
+                                                            preserveScroll
+                                                        />
+                                                    ))}
+                                                </div>
                                             </div>
                                         </>
                                     )}
-                                </div>
-                            </div>
+                                </CardContent>
+                            </Card>
                         </div>
                     </div>
                 </div>

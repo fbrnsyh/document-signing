@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { User, Users, ListOrdered, ChevronRight } from 'lucide-react';
-import PrimaryButton from '@/Components/PrimaryButton';
+import { Button } from '@/Components/ui/button';
 import axios from 'axios';
-import clsx from 'clsx';
+import { cn } from '@/lib/utils';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/Components/ui/card";
 
 export default function ModeSelector({ documentId, workflowId, initialMode, onCreated, onUpdated }) {
     const [mode, setMode] = useState(initialMode || 'direct');
@@ -15,15 +16,15 @@ export default function ModeSelector({ documentId, workflowId, initialMode, onCr
             description: 'You are the only signer. Quick and easy for documents you just need to sign yourself.',
             icon: User,
             color: 'text-blue-500',
-            bg: 'bg-blue-50',
+            bg: 'bg-blue-500/10',
         },
         {
             id: 'sequential',
             name: 'Sequential Signing',
             description: 'Signers sign one after another in a specific order. Each person is notified when it is their turn.',
             icon: ListOrdered,
-            color: 'text-purple-500',
-            bg: 'bg-purple-50',
+            color: 'text-primary',
+            bg: 'bg-primary/10',
         },
         {
             id: 'parallel',
@@ -31,7 +32,7 @@ export default function ModeSelector({ documentId, workflowId, initialMode, onCr
             description: 'Everyone can sign at the same time. No specific order is enforced.',
             icon: Users,
             color: 'text-green-500',
-            bg: 'bg-green-50',
+            bg: 'bg-green-500/10',
         },
     ];
 
@@ -42,7 +43,6 @@ export default function ModeSelector({ documentId, workflowId, initialMode, onCr
                 const response = await axios.patch(`/api/workflows/${workflowId}`, { mode });
                 onUpdated(response.data);
             } else {
-                // Wait, backend store needs document_id
                 const response = await axios.post('/api/workflows', { 
                     document_id: documentId,
                     mode 
@@ -62,39 +62,49 @@ export default function ModeSelector({ documentId, workflowId, initialMode, onCr
                 {modes.map((m) => {
                     const Icon = m.icon;
                     return (
-                        <div
+                        <Card
                             key={m.id}
                             onClick={() => setMode(m.id)}
-                            className={clsx(
-                                'relative flex flex-col p-6 cursor-pointer rounded-2xl border-2 transition-all duration-200 hover:shadow-lg',
-                                mode === m.id ? 'border-indigo-600 bg-indigo-50/30' : 'border-gray-200 bg-white hover:border-gray-300'
+                            className={cn(
+                                'relative flex flex-col cursor-pointer transition-all duration-200 hover:shadow-md border-2',
+                                mode === m.id ? 'border-primary ring-1 ring-primary/20 bg-primary/5' : 'hover:border-primary/50'
                             )}
                         >
-                            <div className={clsx('h-12 w-12 rounded-xl flex items-center justify-center mb-4', m.bg)}>
-                                <Icon className={clsx('h-6 w-6', m.color)} />
-                            </div>
-                            <h3 className="text-lg font-bold text-gray-900 mb-2">{m.name}</h3>
-                            <p className="text-sm text-gray-500 flex-grow">{m.description}</p>
+                            <CardHeader className="p-6 pb-2">
+                                <div className={cn('h-12 w-12 rounded-xl flex items-center justify-center mb-2', m.bg)}>
+                                    <Icon className={cn('h-6 w-6', m.color)} />
+                                </div>
+                                <CardTitle className="text-lg font-bold">{m.name}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-6 pt-0 flex-grow">
+                                <CardDescription className="text-muted-foreground leading-relaxed">
+                                    {m.description}
+                                </CardDescription>
+                            </CardContent>
                             
                             {mode === m.id && (
-                                <div className="absolute top-4 right-4 h-6 w-6 bg-indigo-600 rounded-full flex items-center justify-center">
-                                    <div className="h-2 w-2 rounded-full bg-white" />
+                                <div className="absolute top-4 right-4 h-5 w-5 bg-primary rounded-full flex items-center justify-center shadow-lg animate-in zoom-in-50 duration-200">
+                                    <div className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />
                                 </div>
                             )}
-                        </div>
+                        </Card>
                     );
                 })}
             </div>
 
             <div className="flex justify-end">
-                <PrimaryButton 
+                <Button 
                     onClick={handleSubmit} 
                     disabled={loading}
-                    className="gap-2"
+                    className="group"
                 >
-                    Continue to {mode === 'direct' ? 'Field Placement' : 'Signers'}
-                    <ChevronRight className="h-4 w-4" />
-                </PrimaryButton>
+                    {loading ? "Saving..." : (
+                        <>
+                            Continue to {mode === 'direct' ? 'Field Placement' : 'Signers'}
+                            <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                        </>
+                    )}
+                </Button>
             </div>
         </div>
     );

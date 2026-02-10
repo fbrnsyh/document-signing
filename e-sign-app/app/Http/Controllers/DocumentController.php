@@ -24,7 +24,38 @@ class DocumentController extends Controller
 
     public function index(Request $request)
     {
-        $query = Document::where('uploader_id', Auth::id());
+        $userId = Auth::id();
+        $userEmail = Auth::user()->email;
+
+        $query = Document::where(function ($q) use ($userId, $userEmail) {
+            // 1. User is the uploader
+            $q->where('uploader_id', $userId)
+              // 2. User is a participant (signer)
+              ->orWhereHas('workflow.signers', function ($sq) use ($userId, $userEmail) {
+                  $sq->where(function ($q2) use ($userId, $userEmail) {
+                      $q2->where('user_id', $userId)->orWhere('email', $userEmail);
+                  })
+                  ->where(function ($q3) {
+                      // Already signed
+                      $q3->whereNotNull('signed_at')
+                         ->orWhereIn('status', ['signed', 'completed'])
+                         // OR it's an active parallel/direct workflow
+                         ->orWhereHas('workflow', function ($wq) {
+                             $wq->whereIn('mode', ['parallel', 'direct'])
+                                ->where('status', 'pending');
+                         })
+                         // OR it's their turn in a sequential workflow
+                         ->orWhere(function ($q4) {
+                             $q4->where('status', 'pending')
+                                ->whereHas('workflow', function ($wq) {
+                                    $wq->where('mode', 'sequential')
+                                       ->where('status', 'pending');
+                                })
+                                ->whereRaw('`order` = (SELECT MIN(`s2`.`order`) FROM `signers` AS `s2` WHERE `s2`.`workflow_id` = `signers`.`workflow_id` AND `s2`.`status` = "pending")');
+                         });
+                  });
+              });
+        });
 
         if ($request->boolean('include_archived')) {
             // Show everything
@@ -48,7 +79,29 @@ class DocumentController extends Controller
             });
         }
 
-        $documents = $query->orderBy('created_at', 'desc')->paginate(10); // Removed withQueryString to satisfy linter, though it works
+        $documents = $query->with(['uploader', 'workflow.signers'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        $documents->getCollection()->transform(function ($doc) use ($userId, $userEmail) {
+            $isOwner = $doc->uploader_id === $userId;
+            $mySigner = $doc->workflow?->signers->first(function ($s) use ($userId, $userEmail) {
+                return ($s->user_id !== null && $s->user_id === $userId) || ($s->email === $userEmail);
+            });
+
+            $doc->is_owner = $isOwner;
+            if ($mySigner) {
+                $doc->my_status = $mySigner->status;
+                // Add a flag if it's their turn
+                if ($doc->workflow?->mode === 'sequential') {
+                    $nextSigner = $doc->workflow->signers->where('status', 'pending')->sortBy('order')->first();
+                    $doc->is_my_turn = $nextSigner && $nextSigner->id === $mySigner->id;
+                } else {
+                    $doc->is_my_turn = $mySigner->status === 'pending';
+                }
+            }
+            return $doc;
+        });
 
         if ($request->wantsJson()) {
             return response()->json($documents);
@@ -102,6 +155,14 @@ class DocumentController extends Controller
         $redirectParams = [];
         if ($request->folder_id) {
             $redirectParams['folder_id'] = $request->folder_id;
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Document uploaded successfully',
+                'document' => $document,
+                'redirect' => route('documents.index', $redirectParams)
+            ]);
         }
 
         return redirect()->route('documents.index', $redirectParams)->with('success', 'Document uploaded successfully');

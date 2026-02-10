@@ -4,6 +4,7 @@ import Dropdown from "@/Components/Dropdown";
 import NavLink from "@/Components/NavLink";
 import ResponsiveNavLink from "@/Components/ResponsiveNavLink";
 import DarkModeToggle from "@/Components/DarkModeToggle";
+import MobileBottomNav from "@/Components/MobileBottomNav";
 import { Link } from "@inertiajs/react";
 
 export default function Authenticated({ user, header, children }) {
@@ -117,7 +118,8 @@ export default function Authenticated({ user, header, children }) {
                             </div>
                         </div>
 
-                        <div className="-me-2 flex items-center sm:hidden">
+                        <div className="flex items-center sm:hidden space-x-2">
+                            <DarkModeToggle />
                             <button
                                 onClick={() =>
                                     setShowingNavigationDropdown(
@@ -166,37 +168,6 @@ export default function Authenticated({ user, header, children }) {
                         " sm:hidden"
                     }
                 >
-                    <div className="pt-2 pb-3 space-y-1">
-                        <ResponsiveNavLink
-                            href={route("dashboard")}
-                            active={route().current("dashboard")}
-                        >
-                            Dashboard
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            href={route("documents.index")}
-                            active={route().current("documents.*")}
-                        >
-                            Documents
-                        </ResponsiveNavLink>
-                        {user && user.isAdmin && (
-                            <>
-                                <ResponsiveNavLink
-                                    href={route("admin.users")}
-                                    active={route().current("admin.users")}
-                                >
-                                    Users
-                                </ResponsiveNavLink>
-                                <ResponsiveNavLink
-                                    href={route("admin.activity")}
-                                    active={route().current("admin.activity")}
-                                >
-                                    Activity
-                                </ResponsiveNavLink>
-                            </>
-                        )}
-                    </div>
-
                     <div className="pt-4 pb-1 border-t border-border">
                         <div className="px-4">
                             <div className="font-medium text-base text-foreground">
@@ -208,9 +179,6 @@ export default function Authenticated({ user, header, children }) {
                         </div>
 
                         <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink href={route("profile.edit")}>
-                                Profile
-                            </ResponsiveNavLink>
                             <ResponsiveNavLink
                                 method="post"
                                 href={route("logout")}
@@ -231,7 +199,8 @@ export default function Authenticated({ user, header, children }) {
                 </header>
             )}
 
-            <main>{children}</main>
+            <main className="pb-20 sm:pb-0">{children}</main>
+            <MobileBottomNav user={user} />
         </div>
     );
 }

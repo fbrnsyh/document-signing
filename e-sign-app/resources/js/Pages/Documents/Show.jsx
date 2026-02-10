@@ -192,13 +192,13 @@ export default function Show({ auth, document }) {
             user={auth.user}
             header={
                 <div className="flex justify-between items-center">
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
+                    <h2 className="font-semibold text-xl text-foreground leading-tight">
                         Document Details
                     </h2>
                     <div className="flex space-x-2">
                         {needsToSign && signingToken && (
                             <Link href={route("sign.index", signingToken)}>
-                                <PrimaryButton className="bg-orange-600 hover:bg-orange-700">
+                                <PrimaryButton className="bg-warning hover:bg-warning/90 text-warning-foreground">
                                     <PenTool className="h-4 w-4 mr-2" />
                                     Sign Document
                                 </PrimaryButton>
@@ -225,28 +225,28 @@ export default function Show({ auth, document }) {
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="border-b border-gray-200">
+                    <div className="bg-card overflow-hidden shadow-sm sm:rounded-lg border border-border">
+                        <div className="border-b border-border">
                             <nav
                                 className="-mb-px flex space-x-8 px-6"
                                 aria-label="Tabs"
                             >
                                 <button
                                     onClick={() => setActiveTab("details")}
-                                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                                    className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                                         activeTab === "details"
-                                            ? "border-indigo-500 text-indigo-600"
-                                            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                                            ? "border-primary text-primary"
+                                            : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
                                     }`}
                                 >
                                     Document Details
                                 </button>
                                 <button
                                     onClick={() => setActiveTab("activity")}
-                                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                                    className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                                         activeTab === "activity"
-                                            ? "border-indigo-500 text-indigo-600"
-                                            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                                            ? "border-primary text-primary"
+                                            : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
                                     }`}
                                 >
                                     Activity Timeline
@@ -292,7 +292,7 @@ export default function Show({ auth, document }) {
                                                     </div>
 
                                                     <div>
-                                                        <InputLabel value="Tags" />
+                                                        <InputLabel value="Tags" className="text-muted-foreground" />
                                                         <div className="flex flex-wrap gap-2 mb-2">
                                                             {data.tags.map(
                                                                 (tag) => (
@@ -300,7 +300,7 @@ export default function Show({ auth, document }) {
                                                                         key={
                                                                             tag
                                                                         }
-                                                                        className="inline-flex items-center px-2 py-1 rounded bg-indigo-100 text-indigo-700 text-xs font-semibold"
+                                                                        className="inline-flex items-center px-2 py-1 rounded bg-primary/10 text-primary text-xs font-semibold"
                                                                     >
                                                                         {tag}
                                                                         <button
@@ -310,7 +310,7 @@ export default function Show({ auth, document }) {
                                                                                     tag,
                                                                                 )
                                                                             }
-                                                                            className="ml-1 text-indigo-500 hover:text-indigo-700"
+                                                                            className="ml-1 text-primary/70 hover:text-primary transition-colors"
                                                                         >
                                                                             &times;
                                                                         </button>
@@ -346,7 +346,7 @@ export default function Show({ auth, document }) {
                                                                 Add
                                                             </SecondaryButton>
                                                         </div>
-                                                        <p className="text-xs text-gray-500 mt-1">
+                                                        <p className="text-xs text-muted-foreground mt-1">
                                                             {data.tags.length}
                                                             /10 tags used
                                                         </p>
@@ -374,10 +374,10 @@ export default function Show({ auth, document }) {
                                                 </form>
                                             ) : (
                                                 <>
-                                                    <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                                                    <h3 className="text-2xl font-bold text-foreground mb-1">
                                                         {document.title}
                                                     </h3>
-                                                    <p className="text-sm text-gray-500 mb-4">
+                                                    <p className="text-sm text-muted-foreground mb-4">
                                                         {
                                                             document.original_filename
                                                         }
@@ -392,14 +392,14 @@ export default function Show({ auth, document }) {
                                                                         key={
                                                                             tag
                                                                         }
-                                                                        className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-600"
+                                                                        className="px-2 py-1 bg-muted rounded text-xs text-muted-foreground font-medium"
                                                                     >
                                                                         #{tag}
                                                                     </span>
                                                                 ),
                                                             )
                                                         ) : (
-                                                            <span className="text-xs text-gray-400 italic">
+                                                            <span className="text-xs text-muted-foreground/60 italic">
                                                                 No tags added
                                                             </span>
                                                         )}
@@ -418,30 +418,30 @@ export default function Show({ auth, document }) {
                                         )}
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-gray-100">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-border">
                                         <div>
-                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                                                 Status
                                             </p>
                                             <span
-                                                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                className={`px-2 inline-flex text-xs leading-5 font-bold rounded-full border ${
                                                     document.status ===
                                                     "completed"
-                                                        ? "bg-green-100 text-green-800"
+                                                        ? "bg-success/10 text-success border-success/20"
                                                         : document.status ===
                                                             "cancelled"
-                                                          ? "bg-red-100 text-red-800"
-                                                          : "bg-yellow-100 text-yellow-800"
+                                                          ? "bg-destructive/10 text-destructive border-destructive/20"
+                                                          : "bg-warning/10 text-warning border-warning/20"
                                                 }`}
                                             >
                                                 {document.status}
                                             </span>
                                         </div>
                                         <div>
-                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                                                 Size
                                             </p>
-                                            <p className="text-sm text-gray-900">
+                                            <p className="text-sm text-foreground">
                                                 {(
                                                     document.file_size /
                                                     1024 /
@@ -451,10 +451,10 @@ export default function Show({ auth, document }) {
                                             </p>
                                         </div>
                                         <div>
-                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                                                 Uploaded On
                                             </p>
-                                            <p className="text-sm text-gray-900">
+                                            <p className="text-sm text-foreground">
                                                 {new Date(
                                                     document.created_at,
                                                 ).toLocaleString()}
@@ -462,11 +462,11 @@ export default function Show({ auth, document }) {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="p-6 bg-gray-50">
+                                <div className="p-6 bg-muted/30">
                                     {pdfLoading ? (
                                         <div className="flex flex-col items-center justify-center h-96">
-                                            <Loader2 className="h-12 w-12 text-indigo-600 animate-spin mb-4" />
-                                            <p className="text-gray-500 font-medium">
+                                            <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
+                                            <p className="text-muted-foreground font-medium">
                                                 Loading document...
                                             </p>
                                         </div>
@@ -474,7 +474,7 @@ export default function Show({ auth, document }) {
                                         <div className="flex flex-col items-center justify-center h-96">
                                             <div className="text-center">
                                                 <svg
-                                                    className="mx-auto h-12 w-12 text-red-400"
+                                                    className="mx-auto h-12 w-12 text-destructive/50"
                                                     fill="none"
                                                     viewBox="0 0 24 24"
                                                     stroke="currentColor"
@@ -486,7 +486,7 @@ export default function Show({ auth, document }) {
                                                         d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                                                     />
                                                 </svg>
-                                                <p className="mt-2 text-sm text-red-500">
+                                                <p className="mt-2 text-sm text-destructive">
                                                     {pdfError}
                                                 </p>
                                                 <a
@@ -494,7 +494,7 @@ export default function Show({ auth, document }) {
                                                         "documents.download",
                                                         document.id,
                                                     )}
-                                                    className="mt-4 inline-block text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+                                                    className="mt-4 inline-block text-primary hover:text-primary/80 text-sm font-medium transition-colors"
                                                 >
                                                     Download to view document
                                                 </a>
@@ -502,7 +502,7 @@ export default function Show({ auth, document }) {
                                         </div>
                                     ) : (
                                         <div className="space-y-4">
-                                            <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200">
+                                            <div className="flex items-center justify-between bg-card p-3 rounded-lg border border-border">
                                                 <button
                                                     disabled={pageNumber <= 1}
                                                     onClick={() =>
@@ -510,11 +510,11 @@ export default function Show({ auth, document }) {
                                                             (p) => p - 1,
                                                         )
                                                     }
-                                                    className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-30 transition-all"
+                                                    className="p-2 rounded-lg hover:bg-muted disabled:opacity-30 transition-all text-muted-foreground hover:text-foreground"
                                                 >
                                                     <ChevronLeft className="h-5 w-5" />
                                                 </button>
-                                                <span className="text-sm font-medium text-gray-700">
+                                                <span className="text-sm font-bold text-foreground">
                                                     Page {pageNumber} /{" "}
                                                     {numPages || 1}
                                                 </span>
@@ -528,13 +528,13 @@ export default function Show({ auth, document }) {
                                                             (p) => p + 1,
                                                         )
                                                     }
-                                                    className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-30 transition-all"
+                                                    className="p-2 rounded-lg hover:bg-muted disabled:opacity-30 transition-all text-muted-foreground hover:text-foreground"
                                                 >
                                                     <ChevronRight className="h-5 w-5" />
                                                 </button>
                                             </div>
                                             <div className="flex justify-center">
-                                                <div className="relative shadow-lg bg-white">
+                                                <div className="relative shadow-xl bg-card border border-border">
                                                     <canvas
                                                         ref={canvasRef}
                                                         className="max-w-full h-auto"

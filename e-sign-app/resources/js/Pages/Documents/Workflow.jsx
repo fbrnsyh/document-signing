@@ -6,7 +6,8 @@ import SignerManagement from "@/Components/Workflow/SignerManagement";
 import FieldPlacement from "@/Components/Workflow/FieldPlacement";
 import ReviewAndSend from "@/Components/Workflow/ReviewAndSend";
 import { CheckCircle, Circle, ChevronRight, ChevronLeft } from "lucide-react";
-import clsx from "clsx";
+import { cn } from "@/lib/utils";
+import { Card, CardContent } from "@/Components/ui/card";
 
 export default function Workflow({ auth, document: initialDocument }) {
     const [step, setStep] = useState(1);
@@ -14,10 +15,10 @@ export default function Workflow({ auth, document: initialDocument }) {
     const [workflow, setWorkflow] = useState(initialDocument.workflow);
 
     const steps = [
-        { id: 1, name: "Select Mode", description: "How should people sign?" },
-        { id: 2, name: "Signers", description: "Who needs to sign?" },
-        { id: 3, name: "Placement", description: "Where should they sign?" },
-        { id: 4, name: "Review", description: "Ready to send?" },
+        { id: 1, name: "Select Mode", description: "How to sign?" },
+        { id: 2, name: "Signers", description: "Who signs?" },
+        { id: 3, name: "Placement", description: "Where to sign?" },
+        { id: 4, name: "Review", description: "Ready?" },
     ];
 
     // Auto-skip signers if direct mode
@@ -44,98 +45,81 @@ export default function Workflow({ auth, document: initialDocument }) {
         <AuthenticatedLayout
             user={auth.user}
             header={
-                <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                    Configure Workflow: {document.title}
+                <h2 className="font-bold text-2xl text-foreground tracking-tight">
+                    Workflow: <span className="text-primary font-extrabold">{document.title}</span>
                 </h2>
             }
         >
             <Head title={`Workflow - ${document.title}`} />
 
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="p-6">
-                            {/* Stepper */}
-                            <nav aria-label="Progress" className="mb-8">
-                                <ol
-                                    role="list"
-                                    className="flex items-center justify-evenly"
-                                >
-                                    {steps.map((s, index) => (
-                                        <li
-                                            key={s.name}
-                                            className={clsx(
-                                                index !== steps.length - 1
-                                                    ? "pr-8 sm:pr-20"
-                                                    : "",
-                                                "relative",
-                                            )}
-                                        >
-                                            <div
-                                                className="flex items-center"
-                                                aria-current={
-                                                    step === s.id
-                                                        ? "step"
-                                                        : undefined
-                                                }
-                                            >
-                                                <div
-                                                    className={clsx(
-                                                        "flex h-8 w-8 items-center justify-center rounded-full border-2 z-10",
-                                                        step > s.id
-                                                            ? "bg-indigo-600 border-indigo-600"
-                                                            : step === s.id
-                                                              ? "border-indigo-600"
-                                                              : "border-gray-300",
-                                                    )}
-                                                >
-                                                    {step > s.id ? (
-                                                        <CheckCircle className="h-5 w-5 text-white" />
-                                                    ) : (
-                                                        <span
-                                                            className={clsx(
-                                                                "text-sm font-medium",
-                                                                step === s.id
-                                                                    ? "text-indigo-600"
-                                                                    : "text-gray-500",
+            <div className="py-12 bg-muted/30 min-h-[calc(100vh-64px)]">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <Card className="border-none shadow-xl bg-card overflow-hidden rounded-3xl">
+                        <CardContent className="p-0">
+                            {/* Stepper Header */}
+                            <div className="bg-muted/50 border-b border-border/50 p-6 md:p-10">
+                                <nav aria-label="Progress">
+                                    <ol role="list" className="flex items-center justify-between max-w-4xl mx-auto">
+                                        {steps.map((s, index) => (
+                                            <li key={s.name} className="flex-1 relative last:flex-none">
+                                                <div className="flex items-center group">
+                                                    <div className="flex flex-col items-center relative z-10 transition-transform duration-300 group-hover:scale-105">
+                                                        <div
+                                                            className={cn(
+                                                                "flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all duration-500 shadow-md",
+                                                                step > s.id
+                                                                    ? "bg-primary border-primary"
+                                                                    : step === s.id
+                                                                      ? "border-primary bg-card ring-4 ring-primary/10"
+                                                                      : "border-border bg-card",
                                                             )}
                                                         >
-                                                            {s.id}
-                                                        </span>
+                                                            {step > s.id ? (
+                                                                <CheckCircle className="h-6 w-6 text-primary-foreground" />
+                                                            ) : (
+                                                                <span
+                                                                    className={cn(
+                                                                        "text-sm font-bold",
+                                                                        step === s.id
+                                                                            ? "text-primary"
+                                                                            : "text-muted-foreground",
+                                                                    )}
+                                                                >
+                                                                    {s.id}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="mt-3 text-center hidden md:block">
+                                                            <p
+                                                                className={cn(
+                                                                    "text-xs font-black uppercase tracking-widest transition-colors",
+                                                                    step === s.id
+                                                                        ? "text-primary"
+                                                                        : "text-muted-foreground/60",
+                                                                )}
+                                                            >
+                                                                {s.name}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {index !== steps.length - 1 && (
+                                                        <div className="flex-grow mx-4 hidden sm:block">
+                                                            <div className={cn(
+                                                                "h-1 rounded-full transition-all duration-1000",
+                                                                step > s.id ? "bg-primary" : "bg-border"
+                                                            )} />
+                                                        </div>
                                                     )}
                                                 </div>
-                                                <div className="ml-4 hidden sm:block">
-                                                    <p
-                                                        className={clsx(
-                                                            "text-sm font-medium",
-                                                            step === s.id
-                                                                ? "text-indigo-600"
-                                                                : "text-gray-500",
-                                                        )}
-                                                    >
-                                                        {s.name}
-                                                    </p>
-                                                    <p className="text-xs text-gray-400">
-                                                        {s.description}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            {index !== steps.length - 1 && (
-                                                <div
-                                                    className="absolute top-4 left-[75%] h-0.5 bg-gray-200"
-                                                    style={{
-                                                        width: "calc(100% - 10rem)",
-                                                    }}
-                                                    aria-hidden="true"
-                                                />
-                                            )}
-                                        </li>
-                                    ))}
-                                </ol>
-                            </nav>
+                                            </li>
+                                        ))}
+                                    </ol>
+                                </nav>
+                            </div>
 
-                            {/* Step Content */}
-                            <div className="mt-10">
+                            {/* Step Content Content */}
+                            <div className="p-6 md:p-12 min-h-[500px] animate-in fade-in slide-in-from-bottom-2 duration-500">
                                 {step === 1 && (
                                     <ModeSelector
                                         documentId={document.id}
@@ -165,6 +149,7 @@ export default function Workflow({ auth, document: initialDocument }) {
                                                 ? setStep(1)
                                                 : prevStep()
                                         }
+                                        onWorkflowUpdate={setWorkflow}
                                     />
                                 )}
 
@@ -176,8 +161,8 @@ export default function Workflow({ auth, document: initialDocument }) {
                                     />
                                 )}
                             </div>
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         </AuthenticatedLayout>

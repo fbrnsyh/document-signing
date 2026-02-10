@@ -30,7 +30,44 @@ class DocumentPolicy
      */
     public function view(User $user, Document $document): bool
     {
-        return $user->id === $document->uploader_id;
+        if ($user->id === $document->uploader_id) {
+            return true;
+        }
+
+        $signer = $document->signers()->where(function ($query) use ($user) {
+            $query->where('user_id', $user->id)
+                  ->orWhere('email', $user->email);
+        })->first();
+
+        if (!$signer) {
+            return false;
+        }
+
+        // If they already signed, they can always view it
+        if ($signer->signed_at !== null || $signer->status === 'signed' || $signer->status === 'completed') {
+            return true;
+        }
+
+        // If it's their turn, they can view it
+        $workflow = $document->workflow;
+        if (!$workflow) {
+            return false;
+        }
+
+        if ($workflow->mode === 'parallel' || $workflow->mode === 'direct') {
+            return $workflow->status !== 'draft';
+        }
+
+        if ($workflow->mode === 'sequential') {
+            $nextSigner = $workflow->signers()
+                ->where('status', 'pending')
+                ->orderBy('order')
+                ->first();
+            
+            return $nextSigner && $nextSigner->id === $signer->id;
+        }
+
+        return false;
     }
 
     /**

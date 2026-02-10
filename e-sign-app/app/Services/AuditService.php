@@ -27,7 +27,7 @@ class AuditService
         ]);
     }
 
-    public function logDocumentUpload(int $documentId, int $userId, Request $request): void
+    public function logDocumentUpload(int $documentId, ?int $userId, Request $request): void
     {
         $this->logEvent(
             'document_uploaded',
@@ -38,17 +38,17 @@ class AuditService
         );
     }
 
-    public function logDocumentView(int $documentId, ?int $userId = null, Request $request = null): void
+    public function logDocumentView(int $documentId, ?int $userId = null, ?Request $request = null): void
     {
         $this->logEvent('document_viewed', $documentId, $userId, $request);
     }
 
-    public function logDocumentSign(int $documentId, int $userId, Request $request): void
+    public function logDocumentSign(int $documentId, ?int $userId, Request $request): void
     {
         $this->logEvent('document_signed', $documentId, $userId, $request);
     }
 
-    public function logDocumentReject(int $documentId, int $userId, Request $request, string $reason): void
+    public function logDocumentReject(int $documentId, ?int $userId, Request $request, string $reason): void
     {
         $this->logEvent(
             'document_rejected',
@@ -59,17 +59,17 @@ class AuditService
         );
     }
 
-    public function logDocumentDelete(int $documentId, int $userId, Request $request): void
+    public function logDocumentDelete(int $documentId, ?int $userId, Request $request): void
     {
         $this->logEvent('document_deleted', $documentId, $userId, $request);
     }
 
-    public function logDocumentArchive(int $documentId, int $userId, Request $request): void
+    public function logDocumentArchive(int $documentId, ?int $userId, Request $request): void
     {
         $this->logEvent('document_archived', $documentId, $userId, $request);
     }
 
-    public function logWorkflowCreated(int $documentId, int $userId, Request $request, array $signers): void
+    public function logWorkflowCreated(int $documentId, ?int $userId, Request $request, array $signers): void
     {
         $this->logEvent(
             'workflow_created',

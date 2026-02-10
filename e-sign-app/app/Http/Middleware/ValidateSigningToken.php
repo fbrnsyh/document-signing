@@ -48,25 +48,30 @@ class ValidateSigningToken
             return response()->json(['message' => 'This signing request was cancelled.'], 410);
         }
 
-        if ($signer->status === 'completed' || $signer->status === 'signed') {
-            return response()->json(['message' => 'You have already signed.'], 409);
-        }
+        $isReadonly = ($signer->status === 'completed' || $signer->status === 'signed');
 
-        // Check if this is a sequential workflow and enforce signing order
-        if ($signer->workflow->mode === 'sequential') {
-            // Check if all previous signers have completed their signatures
-            $previousSignersIncomplete = \App\Models\Signer::where('workflow_id', $signer->workflow_id)
-                ->where('order', '<', $signer->order)
-                ->where('status', '!=', 'completed')
-                ->exists();
+        if (!$isReadonly) {
+            // Check if this is a sequential workflow and enforce signing order
+            if ($signer->workflow->mode === 'sequential') {
+                // Check if all previous signers have completed their signatures
+                $previousSignersIncomplete = \App\Models\Signer::where('workflow_id', $signer->workflow_id)
+                    ->where('order', '<', $signer->order)
+                    ->where('status', '!=', 'completed')
+                    ->where('status', '!=', 'signed')
+                    ->exists();
 
-            if ($previousSignersIncomplete) {
-                return response()->json(['message' => 'Previous signers must complete their signatures first.'], 403);
+                if ($previousSignersIncomplete) {
+                    return response()->json(['message' => 'Previous signers must complete their signatures first.'], 403);
+                }
             }
         }
 
         // Attach signer and workflow to the request for easy access in controllers
-        $request->merge(['signer_signer' => $signer, 'signer_workflow' => $signer->workflow]);
+        $request->merge([
+            'signer_signer' => $signer, 
+            'signer_workflow' => $signer->workflow,
+            'signer_is_readonly' => $isReadonly
+        ]);
 
         return $next($request);
     }

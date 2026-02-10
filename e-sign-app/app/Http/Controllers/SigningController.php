@@ -32,6 +32,7 @@ class SigningController extends Controller
             'token' => $token,
             'signer' => $signer,
             'workflow' => $workflow,
+            'is_readonly' => $request->get('signer_is_readonly', false),
         ]);
     }
 
@@ -52,6 +53,7 @@ class SigningController extends Controller
         return response()->json([
             'signer' => $signer,
             'workflow' => $workflow,
+            'is_readonly' => $request->get('signer_is_readonly', false),
             'document' => [
                 'id' => $document->id,
                 'title' => $document->title,
@@ -72,6 +74,10 @@ class SigningController extends Controller
         $request->validate([
             'signature' => 'required|string', // base64 PNG
         ]);
+
+        if ($request->get('signer_is_readonly')) {
+            return response()->json(['message' => 'Document is in read-only mode.'], 403);
+        }
 
         if ($field->signer_id !== $signer->id) {
             return response()->json(['message' => 'Unauthorized field.'], 403);
@@ -169,11 +175,12 @@ class SigningController extends Controller
             $token = $signingService->generateToken($nextSigner);
 
             // Log the notification (in a real implementation, you would send an email/notification here)
-            $this->auditService->logDocumentSign(
+            $this->auditService->logEvent(
+                'next_signer_notified',
                 $workflow->document_id,
                 auth()->id(),
                 request(),
-                "Notified next signer: {$nextSigner->email} (Token: {$token})"
+                ['message' => "Notified next signer: {$nextSigner->email} (Token: {$token})"]
             );
         }
     }

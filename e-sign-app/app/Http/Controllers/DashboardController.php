@@ -49,8 +49,19 @@ class DashboardController extends Controller
             $query->where('status', 'pending')
                   ->where(function ($q) use ($userId, $userEmail) {
                       $q->where('user_id', $userId)->orWhere('email', $userEmail);
+                  })
+                  ->where(function ($sq) {
+                      $sq->whereHas('workflow', function ($wq) {
+                          $wq->whereIn('mode', ['parallel', 'direct']);
+                      })
+                      ->orWhere(function ($sq2) {
+                          $sq2->whereHas('workflow', function ($wq) {
+                              $wq->where('mode', 'sequential');
+                          })->whereRaw('`order` = (SELECT MIN(`s2`.`order`) FROM `signers` AS `s2` WHERE `s2`.`workflow_id` = `signers`.`workflow_id` AND `s2`.`status` = "pending")');
+                      });
                   });
-        })->where('status', 'pending')
+        })
+->where('status', 'pending')
           ->with(['uploader', 'workflow.signers' => function ($query) {
               $query->where('status', 'pending')
                     ->orWhere('status', 'signed');

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
     UserPlus,
     Trash2,
@@ -9,13 +9,14 @@ import {
     User,
     Users,
 } from "lucide-react";
-import PrimaryButton from "@/Components/PrimaryButton";
-import SecondaryButton from "@/Components/SecondaryButton";
-import TextInput from "@/Components/TextInput";
-import InputLabel from "@/Components/InputLabel";
-import InputError from "@/Components/InputError";
+import { Button } from "@/Components/ui/button";
+import { Input } from "@/Components/ui/input";
+import { Label } from "@/Components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/Components/ui/card";
+import { FormField } from "@/Components/ui/form-field";
 import axios from "axios";
 import { Reorder } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 export default function SignerManagement({
     workflow,
@@ -42,7 +43,6 @@ export default function SignerManagement({
             setSigners(updatedSigners);
             setNewSigner({ email: "", name: "" });
 
-            // Update the workflow state with the new signers
             onWorkflowUpdate({
                 ...workflow,
                 signers: updatedSigners,
@@ -68,7 +68,6 @@ export default function SignerManagement({
             const updatedSigners = signers.filter((s) => s.id !== signerId);
             setSigners(updatedSigners);
 
-            // Update the workflow state with the updated signers
             onWorkflowUpdate({
                 ...workflow,
                 signers: updatedSigners,
@@ -89,7 +88,6 @@ export default function SignerManagement({
                 orders,
             });
 
-            // Update the workflow state with the reordered signers
             onWorkflowUpdate({
                 ...workflow,
                 signers: newOrder,
@@ -102,93 +100,82 @@ export default function SignerManagement({
     return (
         <div className="max-w-4xl mx-auto">
             <div className="mb-8">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                <h3 className="text-2xl font-bold tracking-tight mb-2">
                     Manage Signers
                 </h3>
-                <p className="text-gray-500">
+                <p className="text-muted-foreground">
                     {workflow.mode === "sequential"
                         ? "Add signers in the order they should sign. Drag to reorder."
                         : "Add all people who need to sign this document."}
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                 {/* Add Signer Form */}
-                <div className="bg-gray-50 p-6 rounded-2xl h-fit border border-gray-200">
-                    <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <UserPlus className="h-5 w-5 text-indigo-600" />
-                        Add New Signer
-                    </h4>
-                    <form onSubmit={handleAdd} className="space-y-4">
-                        <div>
-                            <InputLabel htmlFor="name" value="Full Name" />
-                            <div className="mt-1 relative rounded-md shadow-sm">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <User className="h-4 w-4 text-gray-400" />
-                                </div>
-                                <TextInput
-                                    id="name"
-                                    type="text"
-                                    className="block w-full pl-10"
-                                    value={newSigner.name}
-                                    onChange={(e) =>
-                                        setNewSigner({
-                                            ...newSigner,
-                                            name: e.target.value,
-                                        })
-                                    }
-                                    placeholder="Jane Doe"
-                                    required
-                                />
-                            </div>
-                            <InputError message={errors.name} />
-                        </div>
-
-                        <div>
-                            <InputLabel htmlFor="email" value="Email Address" />
-                            <div className="mt-1 relative rounded-md shadow-sm">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Mail className="h-4 w-4 text-gray-400" />
-                                </div>
-                                <TextInput
-                                    id="email"
-                                    type="email"
-                                    className="block w-full pl-10"
-                                    value={newSigner.email}
-                                    onChange={(e) =>
-                                        setNewSigner({
-                                            ...newSigner,
-                                            email: e.target.value,
-                                        })
-                                    }
-                                    placeholder="jane@example.com"
-                                    required
-                                />
-                            </div>
-                            <InputError
-                                message={errors.email || errors.message}
+                <Card className="shadow-sm">
+                    <CardHeader>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                            <UserPlus className="h-5 w-5 text-primary" />
+                            Add New Signer
+                        </CardTitle>
+                        <CardDescription>
+                            Enter details for a new recipient.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleAdd} className="space-y-4">
+                            <FormField
+                                label="Full Name"
+                                value={newSigner.name}
+                                onChange={(e) =>
+                                    setNewSigner({
+                                        ...newSigner,
+                                        name: e.target.value,
+                                    })
+                                }
+                                placeholder="Jane Doe"
+                                required
+                                error={errors.name}
                             />
-                        </div>
 
-                        <PrimaryButton
-                            className="w-full justify-center"
-                            disabled={loading}
-                        >
-                            {loading ? "Adding..." : "Add Signer"}
-                        </PrimaryButton>
-                    </form>
-                </div>
+                            <FormField
+                                label="Email Address"
+                                type="email"
+                                value={newSigner.email}
+                                onChange={(e) =>
+                                    setNewSigner({
+                                        ...newSigner,
+                                        email: e.target.value,
+                                    })
+                                }
+                                placeholder="jane@example.com"
+                                required
+                                error={errors.email || errors.message}
+                            />
+
+                            <Button
+                                className="w-full"
+                                disabled={loading}
+                                type="submit"
+                            >
+                                {loading ? "Adding..." : "Add Signer"}
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
 
                 {/* Signers List */}
-                <div>
-                    <h4 className="font-semibold text-gray-900 mb-4">
-                        Signers List ({signers.length}/10)
-                    </h4>
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center px-1">
+                        <Label className="text-base font-semibold">
+                            Signers List ({signers.length}/10)
+                        </Label>
+                    </div>
 
                     {signers.length === 0 ? (
-                        <div className="text-center py-12 bg-white rounded-2xl border-2 border-dashed border-gray-200">
-                            <Users className="h-12 w-12 text-gray-300 mx-auto mb-2" />
-                            <p className="text-gray-400">
+                        <div className="text-center py-12 bg-muted/30 rounded-lg border-2 border-dashed border-border/50">
+                            <Users className="h-12 w-12 text-muted-foreground/20 mx-auto mb-4" />
+                            <p className="text-muted-foreground text-sm">
                                 No signers added yet.
                             </p>
                         </div>
@@ -207,55 +194,56 @@ export default function SignerManagement({
                                 <Reorder.Item
                                     key={signer.id}
                                     value={signer}
-                                    className="bg-white p-4 rounded-xl border border-gray-200 flex items-center shadow-sm group"
+                                    className="bg-card p-4 rounded-lg border border-border flex items-center shadow-sm group hover:border-primary/50 transition-colors"
                                 >
                                     {workflow.mode === "sequential" && (
-                                        <div className="mr-4 text-gray-400 cursor-grab active:cursor-grabbing">
-                                            <GripVertical className="h-5 w-5" />
+                                        <div className="mr-3 text-muted-foreground/30 cursor-grab active:cursor-grabbing hover:text-primary transition-colors">
+                                            <GripVertical className="h-4 w-4" />
                                         </div>
                                     )}
-                                    <div className="flex-grow">
-                                        <div className="flex items-center gap-2">
+                                    <div className="flex-grow min-w-0">
+                                        <div className="flex items-center gap-2 mb-0.5">
                                             {workflow.mode === "sequential" && (
-                                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-700">
+                                                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
                                                     {index + 1}
                                                 </span>
                                             )}
-                                            <span className="font-medium text-gray-900">
+                                            <span className="font-semibold text-sm text-foreground truncate">
                                                 {signer.name}
                                             </span>
                                         </div>
-                                        <div className="text-sm text-gray-500">
+                                        <div className="text-xs text-muted-foreground truncate">
                                             {signer.email}
                                         </div>
                                     </div>
-                                    <button
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
                                         onClick={() => handleRemove(signer.id)}
-                                        className="text-gray-400 hover:text-red-500 transition-colors p-2"
+                                        className="h-8 w-8 text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
                                     >
-                                        <Trash2 className="h-5 w-5" />
-                                    </button>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
                                 </Reorder.Item>
                             ))}
                         </Reorder.Group>
                     )}
 
                     {errors.signers && (
-                        <div className="mt-4 text-sm text-red-600 font-medium">
+                        <div className="px-1 text-sm text-destructive font-medium animate-in slide-in-from-top-1">
                             {errors.signers}
                         </div>
                     )}
                 </div>
             </div>
 
-            <div className="mt-12 flex justify-between border-t border-gray-100 pt-8">
-                <SecondaryButton onClick={onBack} className="gap-2">
+            <div className="mt-12 flex justify-between border-t border-border pt-8">
+                <Button variant="outline" onClick={onBack} className="gap-2">
                     <ChevronLeft className="h-4 w-4" />
                     Back
-                </SecondaryButton>
-                <PrimaryButton
+                </Button>
+                <Button
                     onClick={() => {
-                        // Update workflow with current signers before navigating
                         onWorkflowUpdate({
                             ...workflow,
                             signers: signers,
@@ -267,7 +255,7 @@ export default function SignerManagement({
                 >
                     Continue to Field Placement
                     <ChevronRight className="h-4 w-4" />
-                </PrimaryButton>
+                </Button>
             </div>
         </div>
     );

@@ -43,4 +43,9 @@ class Document extends Model
     {
         return $this->hasOne(Workflow::class);
     }
+
+    public function signers()
+    {
+        return $this->hasManyThrough(Signer::class, Workflow::class);
+    }
 }

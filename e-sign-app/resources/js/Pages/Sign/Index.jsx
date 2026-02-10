@@ -25,7 +25,9 @@ export default function SignIndex({
     token,
     signer: initialSigner,
     workflow: initialWorkflow,
+    is_readonly: initialIsReadonly = false,
 }) {
+    const [isReadonly, setIsReadonly] = useState(initialIsReadonly);
     const [loading, setLoading] = useState(true);
     const [numPages, setNumPages] = useState(null);
     const [pageNumber, setPageNumber] = useState(1);
@@ -48,6 +50,9 @@ export default function SignIndex({
             try {
                 const response = await axios.get(`/api/sign/${token}`);
                 setFields(response.data.fields);
+                if (response.data.is_readonly !== undefined) {
+                    setIsReadonly(response.data.is_readonly);
+                }
 
                 // Load PDF
                 console.log("Fetching PDF document...");
@@ -148,7 +153,7 @@ export default function SignIndex({
     }, [pageNumber, scale, renderPage]);
 
     const handleFieldClick = (field) => {
-        if (field.status === "completed") return;
+        if (field.status === "completed" || isReadonly) return;
         setSelectedField(field);
         setIsSignatureModalOpen(true);
     };
@@ -206,15 +211,15 @@ export default function SignIndex({
 
     if (rejected) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-                <div className="max-w-md w-full bg-white rounded-3xl p-10 shadow-xl text-center border border-gray-100">
-                    <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <XCircle className="h-10 w-10 text-red-500" />
+            <div className="min-h-screen bg-muted flex items-center justify-center p-6">
+                <div className="max-w-md w-full bg-card rounded-3xl p-10 shadow-xl text-center border border-border">
+                    <div className="w-20 h-20 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <XCircle className="h-10 w-10 text-destructive" />
                     </div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                    <h1 className="text-2xl font-bold text-foreground mb-2">
                         Document Rejected
                     </h1>
-                    <p className="text-gray-500 mb-8">
+                    <p className="text-muted-foreground mb-8">
                         Thank you for your feedback. The document owner has been
                         notified about your rejection.
                     </p>
@@ -233,7 +238,7 @@ export default function SignIndex({
                     <div className="mt-4">
                         <Link
                             href="/dashboard"
-                            className="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
+                            className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
                         >
                             Return to Dashboard
                         </Link>
@@ -245,15 +250,15 @@ export default function SignIndex({
 
     if (success) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-                <div className="max-w-md w-full bg-white rounded-3xl p-10 shadow-xl text-center border border-gray-100">
-                    <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <CheckCircle2 className="h-10 w-10 text-green-500" />
+            <div className="min-h-screen bg-muted flex items-center justify-center p-6">
+                <div className="max-w-md w-full bg-card rounded-3xl p-10 shadow-xl text-center border border-border">
+                    <div className="w-20 h-20 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <CheckCircle2 className="h-10 w-10 text-success" />
                     </div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                    <h1 className="text-2xl font-bold text-foreground mb-2">
                         Signing Complete!
                     </h1>
-                    <p className="text-gray-500 mb-8">
+                    <p className="text-muted-foreground mb-8">
                         Thank you for signing the document. All parties will be
                         notified once the process is complete.
                     </p>
@@ -272,7 +277,7 @@ export default function SignIndex({
                     <div className="mt-4">
                         <Link
                             href="/dashboard"
-                            className="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
+                            className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
                         >
                             Return to Dashboard
                         </Link>
@@ -284,9 +289,9 @@ export default function SignIndex({
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
-                <Loader2 className="h-12 w-12 text-indigo-600 animate-spin mb-4" />
-                <p className="text-gray-500 font-medium animate-pulse">
+            <div className="min-h-screen bg-muted flex flex-col items-center justify-center p-6">
+                <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
+                <p className="text-muted-foreground font-medium animate-pulse">
                     Preparing your document...
                 </p>
             </div>
@@ -299,23 +304,23 @@ export default function SignIndex({
             error.includes("sequential signing") ||
             error.includes("Previous signers must complete");
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-                <div className="max-w-md w-full bg-white rounded-3xl p-10 shadow-xl text-center border border-gray-100">
+            <div className="min-h-screen bg-muted flex items-center justify-center p-6">
+                <div className="max-w-md w-full bg-card rounded-3xl p-10 shadow-xl text-center border border-border">
                     <div
-                        className={`w-20 h-20 ${isSequentialError ? "bg-yellow-50" : "bg-red-50"} rounded-full flex items-center justify-center mx-auto mb-6`}
+                        className={`w-20 h-20 ${isSequentialError ? "bg-warning/10" : "bg-destructive/10"} rounded-full flex items-center justify-center mx-auto mb-6`}
                     >
                         <XCircle
-                            className={`h-10 w-10 ${isSequentialError ? "text-yellow-500" : "text-red-500"}`}
+                            className={`h-10 w-10 ${isSequentialError ? "text-warning" : "text-destructive"}`}
                         />
                     </div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                    <h1 className="text-2xl font-bold text-foreground mb-2">
                         {isCancelled
                             ? "Signing Request Cancelled"
                             : isSequentialError
                               ? "Sequential Signing"
                               : "Document Loading Error"}
                     </h1>
-                    <p className="text-gray-500 mb-8">
+                    <p className="text-muted-foreground mb-8">
                         {isCancelled
                             ? "This signing request has been cancelled and is no longer available."
                             : error}
@@ -331,7 +336,7 @@ export default function SignIndex({
                     <div className="mt-4">
                         <Link
                             href="/dashboard"
-                            className="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
+                            className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
                         >
                             Return to Dashboard
                         </Link>
@@ -342,20 +347,20 @@ export default function SignIndex({
     }
 
     return (
-        <div className="min-h-screen bg-slate-100 flex flex-col">
+        <div className="min-h-screen bg-muted/50 flex flex-col">
             <Head title={`Sign - ${initialWorkflow.document.title}`} />
 
             {/* Header */}
-            <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm">
+            <header className="bg-card border-b border-border px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm">
                 <div className="flex items-center gap-4">
-                    <div className="bg-indigo-600 p-2 rounded-lg">
-                        <FileText className="h-5 w-5 text-white" />
+                    <div className="bg-primary p-2 rounded-lg">
+                        <FileText className="h-5 w-5 text-primary-foreground" />
                     </div>
                     <div>
-                        <h1 className="font-bold text-gray-900 leading-none">
+                        <h1 className="font-bold text-foreground leading-none">
                             {initialWorkflow.document.title}
                         </h1>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                             Requested by{" "}
                             {initialWorkflow.document.uploader?.name ||
                                 "System"}
@@ -363,47 +368,68 @@ export default function SignIndex({
                     </div>
                 </div>
 
+                {isReadonly && (
+                    <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 rounded-full">
+                        <ShieldCheck className="h-4 w-4 text-primary" />
+                        <span className="text-xs font-bold text-primary uppercase tracking-wider">
+                            Read Only Mode
+                        </span>
+                    </div>
+                )}
+
                 <div className="flex items-center gap-3">
                     <div className="hidden md:flex items-center gap-2 mr-6 text-sm">
-                        <span className="text-gray-400">Progress:</span>
-                        <span className="font-bold text-indigo-600">
+                        <span className="text-muted-foreground">Progress:</span>
+                        <span className="font-bold text-primary">
                             {
                                 fields.filter((f) => f.status === "completed")
                                     .length
                             }{" "}
                             / {fields.length}
                         </span>
-                        <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
                             <div
-                                className="h-full bg-indigo-600 transition-all duration-500"
+                                className="h-full bg-primary transition-all duration-500"
                                 style={{
-                                    width: `${(fields.filter((f) => f.status === "completed").length / fields.length) * 100}%`,
+                                    width: `${(fields.filter((f) => f.status === "completed").length / (fields.length || 1)) * 100}%`,
                                 }}
                             />
                         </div>
                     </div>
 
-                    <SecondaryButton
-                        onClick={() => setIsRejectModalOpen(true)}
-                        className="text-red-600 hover:bg-red-50 border-gray-200"
-                    >
-                        <XCircle className="h-4 w-4 mr-2" />
-                        Reject
-                    </SecondaryButton>
+                    {!isReadonly && (
+                        <>
+                            <SecondaryButton
+                                onClick={() => setIsRejectModalOpen(true)}
+                                className="text-destructive hover:bg-destructive/10 border-border"
+                            >
+                                <XCircle className="h-4 w-4 mr-2" />
+                                Reject
+                            </SecondaryButton>
 
-                    <PrimaryButton
-                        disabled={!allFieldsSigned || submitting}
-                        onClick={handleFinalize}
-                    >
-                        {submitting ? "Processing..." : "Complete Signing"}
-                    </PrimaryButton>
+                            <PrimaryButton
+                                disabled={!allFieldsSigned || submitting}
+                                onClick={handleFinalize}
+                            >
+                                {submitting ? "Processing..." : "Complete Signing"}
+                            </PrimaryButton>
+                        </>
+                    )}
+
+                    {isReadonly && (
+                        <Link href="/dashboard">
+                            <SecondaryButton>
+                                Back to Dashboard
+                            </SecondaryButton>
+                        </Link>
+                    )}
                 </div>
             </header>
 
             <main className="flex-grow flex flex-col md:flex-row h-[calc(100vh-73px)]">
                 {/* PDF Viewer Container */}
-                <div className="flex-grow bg-slate-200 overflow-auto p-4 md:p-8 flex justify-center custom-scrollbar">
-                    <div className="relative shadow-2xl bg-white h-fit">
+                <div className="flex-grow bg-muted overflow-auto p-4 md:p-8 flex justify-center custom-scrollbar">
+                    <div className="relative shadow-2xl bg-card h-fit">
                         <canvas ref={canvasRef} className="max-w-full h-auto" />
 
                         {/* Fields Overlay */}
@@ -427,21 +453,21 @@ export default function SignIndex({
                                         className={clsx(
                                             "rounded border-2 flex flex-col items-center justify-center p-1 transition-all group",
                                             isCompleted
-                                                ? "border-green-500 bg-green-50/50 cursor-default"
-                                                : "border-indigo-400 bg-indigo-50/80 hover:bg-indigo-100 hover:border-indigo-600 cursor-pointer shadow-sm hover:shadow-md animate-pulse hover:animate-none",
+                                                ? "border-success bg-success/10 cursor-default"
+                                                : "border-primary bg-primary/10 hover:bg-primary/20 hover:border-primary cursor-pointer shadow-sm hover:shadow-md animate-pulse hover:animate-none",
                                         )}
                                     >
                                         {isCompleted ? (
                                             <div className="flex flex-col items-center opacity-70 scale-90">
-                                                <CheckCircle2 className="h-4 w-4 text-green-600 mb-0.5" />
-                                                <span className="text-[8px] font-bold text-green-700 uppercase tracking-tighter">
+                                                <CheckCircle2 className="h-4 w-4 text-success mb-0.5" />
+                                                <span className="text-[8px] font-bold text-success uppercase tracking-tighter">
                                                     Signed
                                                 </span>
                                             </div>
                                         ) : (
                                             <div className="flex flex-col items-center">
-                                                <Signature className="h-4 w-4 text-indigo-600 mb-0.5 group-hover:scale-110 transition-transform" />
-                                                <span className="text-[8px] font-extrabold text-indigo-700 uppercase tracking-tighter text-center">
+                                                <Signature className="h-4 w-4 text-primary mb-0.5 group-hover:scale-110 transition-transform" />
+                                                <span className="text-[8px] font-extrabold text-primary uppercase tracking-tighter text-center">
                                                     Click to {field.field_type}
                                                 </span>
                                             </div>
@@ -453,26 +479,26 @@ export default function SignIndex({
                 </div>
 
                 {/* Right Sidebar - Navigation & Info */}
-                <aside className="w-full md:w-72 bg-white border-l border-gray-200 p-6 flex flex-col shrink-0 overflow-y-auto">
+                <aside className="w-full md:w-72 bg-card border-l border-border p-6 flex flex-col shrink-0 overflow-y-auto">
                     <div className="mb-8">
-                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
+                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4">
                             Navigation
                         </h3>
-                        <div className="flex items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-100 mb-4">
+                        <div className="flex items-center justify-between bg-muted p-3 rounded-xl border border-border mb-4">
                             <button
                                 disabled={pageNumber <= 1}
                                 onClick={() => setPageNumber((p) => p - 1)}
-                                className="p-2 rounded-lg hover:bg-white hover:shadow-sm disabled:opacity-30 transition-all"
+                                className="p-2 rounded-lg hover:bg-card hover:shadow-sm disabled:opacity-30 transition-all"
                             >
                                 <ChevronLeft className="h-5 w-5" />
                             </button>
-                            <span className="text-sm font-bold text-gray-700">
+                            <span className="text-sm font-bold text-foreground">
                                 Page {pageNumber} / {numPages}
                             </span>
                             <button
                                 disabled={pageNumber >= numPages}
                                 onClick={() => setPageNumber((p) => p + 1)}
-                                className="p-2 rounded-lg hover:bg-white hover:shadow-sm disabled:opacity-30 transition-all"
+                                className="p-2 rounded-lg hover:bg-card hover:shadow-sm disabled:opacity-30 transition-all"
                             >
                                 <ChevronRight className="h-5 w-5" />
                             </button>
@@ -480,7 +506,7 @@ export default function SignIndex({
                     </div>
 
                     <div className="mb-8">
-                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
+                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4">
                             Required Fields
                         </h3>
                         <div className="space-y-2">
@@ -494,15 +520,15 @@ export default function SignIndex({
                                     className={clsx(
                                         "w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between group",
                                         f.status === "completed"
-                                            ? "bg-green-50 border-green-100 text-green-700"
-                                            : "bg-white border-gray-100 text-gray-600 hover:border-indigo-200",
+                                            ? "bg-success/10 border-success/20 text-success"
+                                            : "bg-card border-border text-muted-foreground hover:border-primary/50",
                                     )}
                                 >
                                     <div className="flex items-center gap-3">
                                         {f.status === "completed" ? (
                                             <CheckCircle2 className="h-4 w-4" />
                                         ) : (
-                                            <div className="h-4 w-4 rounded-full border-2 border-indigo-200 group-hover:border-indigo-400" />
+                                            <div className="h-4 w-4 rounded-full border-2 border-primary/20 group-hover:border-primary/50" />
                                         )}
                                         <span className="text-sm font-medium">
                                             {f.field_type
@@ -519,14 +545,14 @@ export default function SignIndex({
                         </div>
                     </div>
 
-                    <div className="mt-auto pt-6 border-t border-gray-100">
-                        <div className="flex items-center gap-2 text-gray-400 mb-1">
+                    <div className="mt-auto pt-6 border-t border-border">
+                        <div className="flex items-center gap-2 text-muted-foreground mb-1">
                             <ShieldCheck className="h-3.5 w-3.5" />
                             <span className="text-[10px] font-semibold uppercase tracking-wider">
                                 Secure Signing
                             </span>
                         </div>
-                        <p className="text-[10px] text-gray-400 leading-tight">
+                        <p className="text-[10px] text-muted-foreground leading-tight">
                             Your signature is electronically captured and bound
                             to this document with a secure audit trail.
                         </p>

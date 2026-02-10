@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useMotionValue, motion } from "framer-motion";
 import * as pdfjs from "pdfjs-dist";
 import {
     Signature,
@@ -12,20 +13,116 @@ import {
     X,
     User,
     Settings,
+    MousePointer2,
 } from "lucide-react";
-import PrimaryButton from "@/Components/PrimaryButton";
-import SecondaryButton from "@/Components/SecondaryButton";
+import { Button } from "@/Components/ui/button";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/Components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/Components/ui/card";
+import { Badge } from "@/Components/ui/badge";
 import axios from "axios";
-import clsx from "clsx";
-import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 // Set worker path
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-export default function FieldPlacement({ document, workflow, onNext, onBack }) {
+const DraggableField = ({ 
+    field, 
+    workflow, 
+    pageRef, 
+    canvasRef, 
+    selectedField, 
+    setSelectedField, 
+    handleFieldMove, 
+    getFieldStyle,
+    fieldTypes
+}) => {
+    const x = useMotionValue(0);
+    const y = useMotionValue(0);
+
+    const type = fieldTypes.find((t) => t.id === field.field_type);
+    const signer = workflow.signers?.find((s) => s.id === field.signer_id);
+
+    return (
+        <motion.div
+            drag
+            dragMomentum={false}
+            dragElastic={0}
+            dragConstraints={pageRef}
+            style={{
+                ...getFieldStyle(field),
+                x,
+                y,
+            }}
+            onDragEnd={(e, info) => {
+                if (!canvasRef.current) return;
+
+                const canvasRect = canvasRef.current.getBoundingClientRect();
+                const fieldElement = e.target.closest(".drag-field");
+                if (!fieldElement) return;
+
+                // Use the bounding box of the element to get its absolute position
+                const elementRect = fieldElement.getBoundingClientRect();
+                
+                const newX = ((elementRect.left - canvasRect.left) / canvasRect.width) * 100;
+                const newY = ((elementRect.top - canvasRect.top) / canvasRect.height) * 100;
+
+                // Update state
+                handleFieldMove(
+                    field.id,
+                    Math.max(0, Math.min(100 - field.width, newX)),
+                    Math.max(0, Math.min(100 - field.height, newY)),
+                );
+
+                // Reset motion values immediately to prevent double-transforms
+                x.set(0);
+                y.set(0);
+            }}
+            onClick={() => setSelectedField(field)}
+            whileDrag={{ scale: 1.02, zIndex: 50 }}
+            className={cn(
+                "drag-field rounded border-2 flex flex-col items-center justify-center p-1 cursor-move group",
+                selectedField?.id === field.id
+                    ? "border-primary bg-primary/20 shadow-[0_0_15px_rgba(var(--primary),0.3)] ring-1 ring-primary/30"
+                    : "border-primary/40 bg-card/90 hover:border-primary/70 hover:shadow-md"
+            )}
+        >
+            <div className="flex flex-col items-center justify-center w-full h-full transition-colors duration-200">
+                <div className="flex items-center gap-1 filter drop-shadow-sm">
+                    {type && (
+                        <type.icon
+                            className={cn("h-3 w-3", type.color)}
+                        />
+                    )}
+                    <span className="text-[9px] font-extrabold uppercase tracking-tight truncate leading-none">
+                        {field.field_type}
+                    </span>
+                </div>
+                <div className="mt-0.5 px-1.5 py-0.5 bg-muted/80 rounded-sm border border-border/50 max-w-[90%]">
+                    <p className="text-[7px] font-bold text-muted-foreground truncate text-center uppercase tracking-tighter">
+                        {signer ? signer.name : "Unassigned"}
+                    </p>
+                </div>
+            </div>
+        </motion.div>
+    );
+};
+
+export default function FieldPlacement({ document, workflow, onNext, onBack, onWorkflowUpdate }) {
     const [numPages, setNumPages] = useState(null);
     const [pageNumber, setPageNumber] = useState(1);
     const [fields, setFields] = useState(workflow.fields || []);
+
+    // Sync local fields with workflow fields from parent
+    useEffect(() => {
+        setFields(workflow.fields || []);
+    }, [workflow.fields]);
+
     const [selectedField, setSelectedField] = useState(null);
     const [loading, setLoading] = useState(true);
     const containerRef = useRef(null);
@@ -34,36 +131,34 @@ export default function FieldPlacement({ document, workflow, onNext, onBack }) {
     const pdfRef = useRef(null);
     const [scale, setScale] = useState(1.5);
 
-    console.log("selectedField", selectedField);
-
     const fieldTypes = [
         {
             id: "signature",
             name: "Signature",
             icon: Signature,
             color: "text-blue-500",
-            bg: "bg-blue-50",
+            bg: "bg-blue-500/10",
         },
         {
             id: "initial",
             name: "Initial",
             icon: Type,
-            color: "text-indigo-500",
-            bg: "bg-indigo-50",
+            color: "text-primary",
+            bg: "bg-primary/10",
         },
         {
             id: "date",
             name: "Date",
             icon: Calendar,
             color: "text-green-500",
-            bg: "bg-green-50",
+            bg: "bg-green-500/10",
         },
         {
             id: "text",
             name: "Text Input",
             icon: StickyNote,
-            color: "text-orange-500",
-            bg: "bg-orange-50",
+            color: "text-amber-500",
+            bg: "bg-amber-500/10",
         },
     ];
 
@@ -71,7 +166,7 @@ export default function FieldPlacement({ document, workflow, onNext, onBack }) {
     useEffect(() => {
         const loadPdf = async () => {
             try {
-                const url = `/documents/${document.id}/download`; // Use download URL
+                const url = `/documents/${document.id}/download`;
                 const loadingTask = pdfjs.getDocument(url);
                 const pdf = await loadingTask.promise;
                 pdfRef.current = pdf;
@@ -111,7 +206,6 @@ export default function FieldPlacement({ document, workflow, onNext, onBack }) {
     }, [pageNumber, scale, renderPage]);
 
     const handleAddField = async (type) => {
-        // Find first signer or owner
         const signerId = workflow.signers?.[0]?.id;
 
         if (!signerId) {
@@ -124,10 +218,10 @@ export default function FieldPlacement({ document, workflow, onNext, onBack }) {
         const newFieldData = {
             signer_id: signerId,
             page_number: pageNumber,
-            x_position: 10.0, // Default 10%
-            y_position: 10.0, // Default 10%
-            width: 15.0, // Default 15%
-            height: 5.0, // Default 5%
+            x_position: 10.0,
+            y_position: 10.0,
+            width: 15.0,
+            height: 5.0,
             field_type: type,
             is_required: true,
         };
@@ -138,23 +232,14 @@ export default function FieldPlacement({ document, workflow, onNext, onBack }) {
                 newFieldData,
             );
             const newField = response.data;
-
-            // Update fields array with the new field
             const updatedFields = [...fields, newField];
             setFields(updatedFields);
-
-            // Force a small delay to ensure the state is updated before selecting the field
+            onWorkflowUpdate?.({ ...workflow, fields: updatedFields });
             setTimeout(() => {
                 setSelectedField(newField);
             }, 50);
         } catch (error) {
             console.error("Failed to add field", error);
-            if (error.response?.status === 422) {
-                alert(
-                    "Validation Error: " +
-                        JSON.stringify(error.response.data.errors),
-                );
-            }
         }
     };
 
@@ -163,7 +248,9 @@ export default function FieldPlacement({ document, workflow, onNext, onBack }) {
             await axios.delete(
                 `/api/workflows/${workflow.id}/fields/${fieldId}`,
             );
-            setFields(fields.filter((f) => f.id !== fieldId));
+            const updatedFields = fields.filter((f) => f.id !== fieldId);
+            setFields(updatedFields);
+            onWorkflowUpdate?.({ ...workflow, fields: updatedFields });
             setSelectedField(null);
         } catch (error) {
             console.error("Failed to remove field", error);
@@ -171,44 +258,31 @@ export default function FieldPlacement({ document, workflow, onNext, onBack }) {
     };
 
     const handleFieldMove = async (fieldId, x, y) => {
-        console.log("fieldId ", fieldId);
-        console.log("x ", x);
-        console.log("y ", y);
         try {
-            // Ensure x and y are properly formatted as numbers with 2 decimal places
-            // to match the database precision (decimal(5, 2))
             const xPos = parseFloat(x.toFixed(2));
             const yPos = parseFloat(y.toFixed(2));
 
-            const response = await axios.patch(
+            // Optimistic update
+            const updatedFields = fields.map((f) =>
+                f.id === fieldId ? { ...f, x_position: xPos, y_position: yPos } : f
+            );
+            setFields(updatedFields);
+            onWorkflowUpdate?.({ ...workflow, fields: updatedFields });
+
+            await axios.patch(
                 `/api/workflows/${workflow.id}/fields/${fieldId}`,
                 {
                     x_position: xPos,
                     y_position: yPos,
                 },
             );
-
-            // Update the fields array with the updated field from the response
-            // This ensures all field properties are preserved
-            // setFields(
-            //     fields.map((f) =>
-            //         f.id === fieldId ? { ...f, ...response.data } : f,
-            //     ),
-            // );
-
-            // // Also update the selected field if it's the one being moved
-            // if (selectedField && selectedField.id === fieldId) {
-            //     setSelectedField({ ...selectedField, ...response.data });
-            // }
         } catch (error) {
             console.error("Failed to move field", error);
+            // Revert on error if needed, but for now we maintain the state
         }
     };
 
-    // Calculate absolute styles for fields
     const getFieldStyle = (field) => {
-        if (!canvasRef.current) return {};
-        const { width, height } = canvasRef.current;
         return {
             left: `${field.x_position}%`,
             top: `${field.y_position}%`,
@@ -219,314 +293,221 @@ export default function FieldPlacement({ document, workflow, onNext, onBack }) {
         };
     };
 
+    const handleSignerChange = async (newSignerId) => {
+        if (!selectedField) return;
+        try {
+            const response = await axios.patch(
+                `/api/workflows/${workflow.id}/fields/${selectedField.id}`,
+                {
+                    signer_id: newSignerId,
+                },
+            );
+
+            const updatedFields = fields.map((f) =>
+                f.id === selectedField.id
+                    ? { ...f, ...response.data }
+                    : f,
+            );
+            setFields(updatedFields);
+            onWorkflowUpdate?.({ ...workflow, fields: updatedFields });
+            setSelectedField({ ...selectedField, ...response.data });
+        } catch (error) {
+            console.error("Failed to update field signer:", error);
+        }
+    };
+
     if (loading)
         return (
-            <div className="flex items-center justify-center p-20">
-                Loading PDF...
+            <div className="flex flex-col items-center justify-center p-20 gap-4">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                <p className="text-muted-foreground font-medium">Loading document editor...</p>
             </div>
         );
 
     return (
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col xl:flex-row gap-8">
             {/* Sidebar - Tools & Properties */}
-            <div className="w-full lg:w-80 flex flex-col gap-6 order-2 lg:order-1">
-                <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-                    <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <Plus className="h-4 w-4 text-indigo-600" />
-                        Add Fields
-                    </h4>
-                    <div className="grid grid-cols-2 gap-3">
+            <div className="w-full xl:w-80 flex flex-col gap-6 order-2 xl:order-1">
+                <Card className="shadow-sm">
+                    <CardHeader className="p-4 pb-2">
+                        <CardTitle className="text-sm font-bold flex items-center gap-2">
+                            <Plus className="h-4 w-4 text-primary" />
+                            Toolbox
+                        </CardTitle>
+                        <CardDescription className="text-xs">
+                            Add signing elements to the page.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-4 grid grid-cols-2 gap-2">
                         {fieldTypes.map((t) => {
                             const Icon = t.icon;
                             return (
                                 <button
                                     key={t.id}
                                     onClick={() => handleAddField(t.id)}
-                                    className="flex flex-col items-center justify-center p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors gap-2 group"
+                                    className="flex flex-col items-center justify-center p-3 border border-border bg-card rounded-lg hover:border-primary/50 hover:bg-primary/5 transition-all gap-1.5 group"
                                 >
-                                    <div
-                                        className={clsx("p-2 rounded-lg", t.bg)}
-                                    >
-                                        <Icon
-                                            className={clsx("h-5 w-5", t.color)}
-                                        />
+                                    <div className={cn("p-1.5 rounded-md", t.bg)}>
+                                        <Icon className={cn("h-4 w-4", t.color)} />
                                     </div>
-                                    <span className="text-xs font-medium text-gray-600 group-hover:text-gray-900">
+                                    <span className="text-[10px] font-semibold text-muted-foreground group-hover:text-foreground">
                                         {t.name}
                                     </span>
                                 </button>
                             );
                         })}
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
 
                 {selectedField && (
-                    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm animate-in fade-in slide-in-from-right-4">
-                        <div className="flex items-center justify-between mb-4">
-                            <h4 className="font-bold text-gray-900 flex items-center gap-2">
-                                <Settings className="h-4 w-4 text-indigo-600" />
-                                Field Properties
-                            </h4>
-                            <button
-                                onClick={() => setSelectedField(null)}
-                                className="text-gray-400 hover:text-gray-600"
-                            >
-                                <X className="h-4 w-4" />
-                            </button>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                                    Assigned To
-                                </label>
-                                <select
-                                    className="block w-full text-sm border-gray-200 rounded-lg focus:ring-indigo-500"
-                                    value={selectedField.signer_id}
-                                    onChange={async (e) => {
-                                        const newSignerId = e.target.value;
-                                        try {
-                                            const response = await axios.patch(
-                                                `/api/workflows/${workflow.id}/fields/${selectedField.id}`,
-                                                {
-                                                    signer_id: newSignerId,
-                                                },
-                                            );
-
-                                            // Update fields array with the updated field
-                                            // Merge existing field data with the response to preserve all properties
-                                            const updatedFields = fields.map(
-                                                (f) =>
-                                                    f.id === selectedField.id
-                                                        ? {
-                                                              ...f,
-                                                              ...response.data,
-                                                          }
-                                                        : f,
-                                            );
-                                            setFields(updatedFields);
-
-                                            // Update selected field with the response data
-                                            // Merge to preserve all existing properties
-                                            setSelectedField({
-                                                ...selectedField,
-                                                ...response.data,
-                                            });
-                                        } catch (error) {
-                                            console.error(
-                                                "Failed to update field signer:",
-                                                error,
-                                            );
-                                            if (
-                                                error.response?.status === 422
-                                            ) {
-                                                const errorMessages =
-                                                    Object.values(
-                                                        error.response.data
-                                                            .errors,
-                                                    ).flat();
-                                                alert(
-                                                    "Validation Error: " +
-                                                        errorMessages.join(
-                                                            ", ",
-                                                        ),
-                                                );
-                                            }
-                                        }
-                                    }}
+                    <Card className="shadow-md border-primary/20 animate-in fade-in slide-in-from-right-4">
+                        <CardHeader className="p-4 pb-2">
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                                    <Settings className="h-4 w-4 text-primary" />
+                                    Properties
+                                </CardTitle>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6"
+                                    onClick={() => setSelectedField(null)}
                                 >
-                                    {workflow.signers?.map((s) => (
-                                        <option key={s.id} value={s.id}>
-                                            {s.name} ({s.email})
-                                        </option>
-                                    ))}
-                                    {workflow.mode === "direct" && (
-                                        <option value="0">Self-Sign</option>
-                                    )}
-                                </select>
+                                    <X className="h-3 w-3" />
+                                </Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-2 space-y-4">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                    Assigned Recipient
+                                </label>
+                                <Select
+                                    value={selectedField.signer_id?.toString()}
+                                    onValueChange={handleSignerChange}
+                                >
+                                    <SelectTrigger className="h-8 text-xs">
+                                        <SelectValue placeholder="Select signer" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {workflow.signers?.map((s) => (
+                                            <SelectItem key={s.id} value={s.id.toString()} className="text-xs">
+                                                {s.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
 
-                            <button
-                                onClick={() =>
-                                    handleRemoveField(selectedField.id)
-                                }
-                                className="w-full flex items-center justify-center gap-2 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                            <div className="space-y-1.5 pt-2 border-t">
+                                <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                                    <span>Type:</span>
+                                    <Badge variant="outline" className="h-4 text-[9px] uppercase px-1">
+                                        {selectedField.field_type}
+                                    </Badge>
+                                </div>
+                                <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                                    <span>Required:</span>
+                                    <Badge variant="secondary" className="h-4 text-[9px] px-1">
+                                        Yes
+                                    </Badge>
+                                </div>
+                            </div>
+
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleRemoveField(selectedField.id)}
+                                className="w-full h-8 text-xs gap-2"
                             >
-                                <Trash2 className="h-4 w-4" />
-                                Delete Field
-                            </button>
-                        </div>
-                    </div>
+                                <Trash2 className="h-3.5 w-3.5" />
+                                Remove Field
+                            </Button>
+                        </CardContent>
+                    </Card>
                 )}
 
-                <div className="flex-grow md:block hidden" />
-
-                <div className="space-y-3">
-                    <SecondaryButton
+                <div className="mt-auto space-y-3 pt-6 border-t border-border/50">
+                    <Button
+                        variant="ghost"
                         onClick={onBack}
-                        className="w-full justify-center gap-2"
+                        className="w-full justify-start gap-2"
                     >
                         <ChevronLeft className="h-4 w-4" />
-                        Back
-                    </SecondaryButton>
-                    <PrimaryButton
+                        Prev Step
+                    </Button>
+                    <Button
                         onClick={onNext}
-                        className="w-full justify-center gap-2"
+                        className="w-full justify-between gap-2"
                     >
-                        Review & Send
+                        <span className="flex items-center gap-2">
+                            Review & Send
+                        </span>
                         <ChevronRight className="h-4 w-4" />
-                    </PrimaryButton>
+                    </Button>
                 </div>
             </div>
 
             {/* Main Editor - PDF Viewer */}
-            <div className="flex-grow flex flex-col gap-4 order-1 lg:order-2">
-                {/* Page Controls */}
-                <div className="bg-white border border-gray-200 rounded-xl p-3 flex items-center justify-between shadow-sm">
-                    <div className="flex items-center gap-2">
-                        <button
+            <div className="flex-grow flex flex-col gap-4 order-1 xl:order-2">
+                <div className="bg-card border border-border rounded-xl p-3 flex items-center justify-between shadow-sm">
+                    <div className="flex items-center gap-1">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
                             disabled={pageNumber <= 1}
                             onClick={() => setPageNumber((p) => p - 1)}
-                            className="p-1 rounded hover:bg-gray-100 disabled:opacity-30"
                         >
-                            <ChevronLeft className="h-5 w-5" />
-                        </button>
-                        <span className="text-sm font-medium text-gray-700">
-                            Page {pageNumber} of {numPages}
-                        </span>
-                        <button
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <div className="px-3 py-1 bg-muted rounded-md border text-[13px] font-medium min-w-[100px] text-center">
+                            Page {pageNumber} / {numPages}
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
                             disabled={pageNumber >= numPages}
                             onClick={() => setPageNumber((p) => p + 1)}
-                            className="p-1 rounded hover:bg-gray-100 disabled:opacity-30"
                         >
-                            <ChevronRight className="h-5 w-5" />
-                        </button>
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <span className="text-xs text-gray-400 italic">
-                            Drag fields to move them (Not implemented yet - tap
-                            fields for properties)
-                        </span>
+                    <div className="hidden sm:flex items-center gap-3">
+                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full border border-border/50">
+                            <MousePointer2 className="h-3 w-3" />
+                            Drag and drop fields to position
+                        </div>
                     </div>
                 </div>
 
-                {/* PDF Container */}
                 <div
                     ref={containerRef}
-                    className="relative bg-gray-200 rounded-2xl overflow-auto p-8 shadow-inner border border-gray-300 min-h-[600px] flex justify-center"
+                    className="relative bg-muted/30 rounded-2xl overflow-auto p-4 md:p-12 shadow-inner border border-border min-h-[700px] flex justify-center"
                 >
                     <div
                         ref={pageRef}
-                        className="relative shadow-2xl bg-white h-fit"
+                        className="relative shadow-2xl bg-card h-fit border border-border/50"
                     >
                         <canvas ref={canvasRef} className="max-w-full h-auto" />
 
-                        {/* Fields Overlay */}
                         {fields
                             .filter((f) => f.page_number === pageNumber)
-                            .map((field) => {
-                                const type = fieldTypes.find(
-                                    (t) => t.id === field.field_type,
-                                );
-                                const signer = workflow.signers?.find(
-                                    (s) => s.id === field.signer_id,
-                                );
-                                return (
-                                    <motion.div
-                                        key={field.id}
-                                        drag
-                                        dragMomentum={false}
-                                        dragElastic={0}
-                                        dragConstraints={pageRef}
-                                        onDragEnd={(e, info) => {
-                                            if (
-                                                !pageRef.current ||
-                                                !canvasRef.current
-                                            )
-                                                return;
-
-                                            const pageRect =
-                                                pageRef.current.getBoundingClientRect();
-                                            const canvasRect =
-                                                canvasRef.current.getBoundingClientRect();
-
-                                            // Get the final position of the dragged element
-                                            const elementRect =
-                                                e.target.getBoundingClientRect();
-
-                                            // Calculate the absolute position relative to the canvas
-                                            const relativeX =
-                                                elementRect.left -
-                                                canvasRect.left;
-                                            const relativeY =
-                                                elementRect.top -
-                                                canvasRect.top;
-
-                                            // Convert to percentage of the canvas
-                                            let newX =
-                                                (relativeX / canvasRect.width) *
-                                                100;
-                                            let newY =
-                                                (relativeY /
-                                                    canvasRect.height) *
-                                                100;
-
-                                            // Round to 2 decimal places to match database precision
-                                            newX = Math.round(newX * 100) / 100;
-                                            newY = Math.round(newY * 100) / 100;
-
-                                            handleFieldMove(
-                                                field.id,
-                                                Math.max(
-                                                    0,
-                                                    Math.min(
-                                                        100 - field.width,
-                                                        newX,
-                                                    ),
-                                                ),
-                                                Math.max(
-                                                    0,
-                                                    Math.min(
-                                                        100 - field.height,
-                                                        newY,
-                                                    ),
-                                                ),
-                                            );
-                                        }}
-                                        onClick={() => setSelectedField(field)}
-                                        style={{
-                                            ...getFieldStyle(field),
-                                            x: 0,
-                                            y: 0,
-                                        }}
-                                        className={clsx(
-                                            "rounded border-2 flex flex-col items-center justify-center p-1 cursor-move transition-colors",
-                                            selectedField?.id === field.id
-                                                ? "border-indigo-600 bg-indigo-100/50 shadow-lg"
-                                                : "border-gray-400 bg-white/80",
-                                        )}
-                                    >
-                                        <div className="flex items-center gap-1">
-                                            {type && (
-                                                <type.icon
-                                                    className={clsx(
-                                                        "h-3 w-3",
-                                                        type.color,
-                                                    )}
-                                                />
-                                            )}
-                                            <span className="text-[10px] font-bold uppercase tracking-tighter truncate leading-none">
-                                                {field.field_type}
-                                            </span>
-                                        </div>
-                                        <span className="text-[8px] text-gray-600 truncate max-w-full text-center font-medium mt-0.5">
-                                            {signer
-                                                ? signer.name
-                                                : "Unassigned"}
-                                        </span>
-                                    </motion.div>
-                                );
-                            })}
+                            .map((field) => (
+                                <DraggableField
+                                    key={field.id}
+                                    field={field}
+                                    workflow={workflow}
+                                    pageRef={pageRef}
+                                    canvasRef={canvasRef}
+                                    selectedField={selectedField}
+                                    setSelectedField={setSelectedField}
+                                    handleFieldMove={handleFieldMove}
+                                    getFieldStyle={getFieldStyle}
+                                    fieldTypes={fieldTypes}
+                                />
+                            ))}
                     </div>
                 </div>
             </div>
