@@ -1,0 +1,25 @@
+# Dockerignore file
+.git/
+.env
+.idea/
+.vscode/
+.phpunit.result.cache
+node_modules/
+vendor/
+storage/*.key
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*.log
+tests/
+phpunit.xml
+.editorconfig
+.gitattributes
+README.md
+Dockerfile
+.dockerignore
+package-lock.json
+composer.lock
+# We don't want to copy local builds, the builder stage handles it.
+public/build/
+public/storage
